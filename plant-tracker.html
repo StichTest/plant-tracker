@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Plant Tracker">
+<meta name="theme-color" content="#2d4a2d">
+<title>Plant Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f5f0e8;--parchment:#ede5d0;--ink:#1e1a14;--forest:#2d4a2d;--sage:#6b8f5e;--moss:#4a6741;--terra:#b55a2a;--gold:#c9963a;--green-dot:#3a8a3a;--orange-dot:#d4720a;--red-dot:#c0392b;--line:rgba(45,74,45,.15);--card-bg:rgba(255,252,245,.88);--shadow:0 2px 18px rgba(45,74,45,.09)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);background-image:radial-gradient(ellipse 70% 40% at 15% 10%,rgba(107,143,94,.13) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 90%,rgba(181,90,42,.09) 0%,transparent 55%);font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;padding:0 0 60px}
+header{padding:36px 32px 0;display:flex;align-items:flex-end;justify-content:space-between;max-width:1060px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.header-left{display:flex;align-items:flex-end;gap:14px}
+.header-leaf{font-size:2.4rem;line-height:1}
+.header-text h1{font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;color:var(--forest);line-height:1}
+.header-text p{font-size:.75rem;color:var(--sage);font-weight:300;margin-top:3px;letter-spacing:.05em;text-transform:uppercase}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.sync-badge{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--sage);background:var(--card-bg);border:1px solid var(--line);border-radius:20px;padding:5px 12px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green-dot);flex-shrink:0}
+.season-bar{display:flex;align-items:center;gap:6px}
+.season-label{font-size:.72rem;color:var(--sage);margin-right:2px}
+.season-btn{font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;padding:4px 11px;border:1.5px solid var(--line);background:transparent;color:var(--sage);border-radius:20px;cursor:pointer;transition:all .15s}
+.season-btn:hover{border-color:var(--sage);color:var(--forest)}
+.season-btn.active{background:var(--forest);border-color:var(--forest);color:#fff}
+.season-auto{font-size:.68rem;color:#aaa;margin-left:2px;font-style:italic}
+.data-bar{max-width:1060px;margin:10px auto 0;padding:0 32px;display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.btn-export,.btn-import{font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:5px 13px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.btn-export{background:transparent;border:1.5px solid var(--line);color:var(--sage)}
+.btn-export:hover{border-color:var(--sage);color:var(--forest);background:rgba(107,143,94,.07)}
+.btn-import{background:transparent;border:1.5px solid var(--line);color:var(--sage)}
+.btn-import:hover{border-color:var(--terra);color:var(--terra);background:rgba(181,90,42,.07)}
+.btn-export svg,.btn-import svg{width:12px;height:12px;flex-shrink:0}
+.btn-cloud{font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:5px 13px;border-radius:20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;background:transparent;border:1.5px solid var(--line);color:var(--sage)}
+.btn-cloud:hover{border-color:var(--forest);color:var(--forest);background:rgba(45,74,45,.07)}
+.btn-cloud svg{width:12px;height:12px;flex-shrink:0}
+.btn-cloud.connected{border-color:var(--green-dot);color:var(--moss)}
+.btn-cloud.connected:hover{background:rgba(58,138,58,.07)}
+.btn-cloud.syncing{opacity:.6;pointer-events:none}
+.cloud-modal{background:var(--cream);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(45,74,45,.25);margin:auto}
+.cloud-modal h2{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--forest);margin-bottom:6px}
+.cloud-steps{font-size:.76rem;color:var(--sage);line-height:1.7;margin-bottom:18px}
+.cloud-steps a{color:var(--moss);text-decoration:underline}
+.cloud-steps b{color:var(--forest)}
+.cloud-error{font-size:.74rem;color:var(--red-dot);margin-top:8px;min-height:16px}
+.tab-bar{max-width:1060px;margin:26px auto 0;padding:0 32px;display:flex;gap:6px;align-items:flex-end}
+.tab-bar-left{display:flex;gap:6px}
+.tab-btn{font-family:'DM Sans',sans-serif;font-size:.87rem;font-weight:500;padding:8px 22px;border:1.5px solid var(--line);border-bottom:none;background:var(--parchment);color:var(--sage);border-radius:10px 10px 0 0;cursor:pointer;transition:all .18s;position:relative;top:1px}
+.tab-btn:hover{background:var(--cream);color:var(--forest)}
+.tab-btn.active{background:var(--card-bg);color:var(--forest);border-color:var(--line)}
+.btn-add-plant{font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;padding:7px 16px;border:1.5px dashed rgba(45,74,45,.35);background:transparent;color:var(--sage);border-radius:8px;cursor:pointer;transition:all .18s;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.btn-add-plant:hover{border-color:var(--moss);color:var(--moss);background:rgba(74,103,65,.07)}
+.btn-add-plant svg{width:13px;height:13px;flex-shrink:0}
+.panel-wrap{max-width:1060px;margin:0 auto;padding:0 32px}
+.tab-panel{display:none;background:var(--card-bg);border:1.5px solid var(--line);border-radius:0 12px 12px 12px;box-shadow:var(--shadow);overflow:hidden;animation:fadeIn .2s ease}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* IRRIGATION BAR */
+.irr-bar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:rgba(74,103,65,.07);border-bottom:1px solid rgba(74,103,65,.18);flex-wrap:wrap}
+.irr-label{font-size:.78rem;font-weight:500;color:var(--forest);display:flex;align-items:center;gap:7px}
+.irr-label svg{width:14px;height:14px;flex-shrink:0;color:var(--moss)}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.toggle{position:relative;width:38px;height:22px;cursor:pointer;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#c8b8a2;border-radius:22px;transition:background .2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-slider{background:var(--moss)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(16px)}
+.irr-status{font-size:.75rem;color:var(--sage)}
+.irr-status.on{color:var(--moss);font-weight:500}
+.irr-info{font-size:.73rem;color:var(--forest);display:none;align-items:center;gap:5px;flex-wrap:wrap}
+.irr-info.visible{display:flex}
+.btn-water-all{font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:5px 16px;border:none;background:var(--moss);color:#fff;border-radius:20px;cursor:pointer;transition:background .15s;display:none;margin-left:auto}
+.btn-water-all.visible{display:block}
+.btn-water-all:hover{background:var(--forest)}
+.btn-water-all:active{transform:scale(.96)}
+
+/* FERT BANNER */
+.fert-paused{display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(201,150,58,.1);border-bottom:1px solid rgba(201,150,58,.2);font-size:.76rem;color:#8a6820}
+.fert-paused svg{width:14px;height:14px;flex-shrink:0}
+
+/* GRID */
+.grid-header{display:grid;grid-template-columns:24px 1fr 148px 150px 84px 84px 68px 72px 32px 32px 32px 32px;align-items:center;padding:10px 18px;background:var(--forest);color:rgba(255,255,255,.78);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;gap:4px}
+.gh-c{text-align:center}
+.plant-row{display:grid;grid-template-columns:24px 1fr 148px 150px 84px 84px 68px 72px 32px 32px 32px 32px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);gap:4px;transition:background .15s}
+.plant-row:last-child{border-bottom:none}
+.plant-row:hover{background:rgba(107,143,94,.055)}
+
+/* NAME */
+.plant-name-wrap{display:flex;align-items:center;gap:6px;position:relative}
+.plant-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:500}
+.note-anchor{position:relative;display:inline-flex;align-items:center}
+.note-icon{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--sage);color:var(--sage);font-size:.65rem;font-weight:700;font-style:normal;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;font-family:'DM Sans',sans-serif;line-height:1}
+.note-icon:hover{background:var(--sage);color:#fff}
+.note-tooltip{display:none;position:absolute;left:20px;top:50%;transform:translateY(-50%);background:var(--forest);color:#fff;font-size:.72rem;font-family:'DM Sans',sans-serif;font-weight:400;line-height:1.5;padding:8px 12px;border-radius:8px;white-space:normal;width:220px;z-index:50;box-shadow:0 4px 16px rgba(45,74,45,.3);pointer-events:none}
+.note-tooltip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:var(--forest)}
+.note-anchor:hover .note-tooltip{display:block}
+
+/* CELLS */
+.status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green-dot)}.dot-orange{background:var(--orange-dot)}.dot-red{background:var(--red-dot)}
+.freq-cell{font-size:.75rem;color:var(--sage);line-height:1.5}
+.freq-cell small{display:block;font-size:.68rem;color:#9aaa8e}
+.freq-vol{display:block;font-size:.68rem;color:var(--moss);font-weight:500;margin-top:1px}
+.freq-irr{display:block;font-size:.67rem;color:var(--moss);font-style:italic;margin-top:1px}
+.fdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-left:4px;vertical-align:middle}
+.fert-inactive{font-size:.68rem;color:#b8a060;font-style:italic}
+.fert-dilute{font-size:.67rem;color:var(--terra);display:block;margin-top:1px}
+.fert-dose{font-size:.67rem;color:#9a7040;display:block;margin-top:2px;line-height:1.4}
+.last-cell{text-align:center;font-size:.74rem;color:var(--sage)}
+.last-cell b{font-size:.82rem;font-weight:500;color:var(--ink)}
+.last-cell i{font-size:.69rem;color:#b0a090;font-style:italic}
+.btn-col{text-align:center}
+.btn-w,.btn-f{font-family:'DM Sans',sans-serif;font-size:.71rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1.5px solid;cursor:pointer;transition:all .16s;white-space:nowrap}
+.btn-w{background:rgba(74,103,65,.1);border-color:rgba(74,103,65,.3);color:var(--moss)}
+.btn-w:hover{background:var(--moss);border-color:var(--moss);color:#fff}
+.btn-f{background:rgba(181,90,42,.1);border-color:rgba(181,90,42,.28);color:var(--terra)}
+.btn-f:hover{background:var(--terra);border-color:var(--terra);color:#fff}
+.btn-f:disabled,.btn-w:disabled{opacity:.32;cursor:not-allowed}
+.btn-w:not(:disabled):active,.btn-f:not(:disabled):active{transform:scale(.96)}
+.icon-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;color:#c8b8a2}
+.icon-btn:hover{background:rgba(107,143,94,.12);color:var(--sage)}
+.icon-btn.del:hover{background:rgba(192,57,43,.08);color:var(--red-dot)}
+.icon-btn svg{width:14px;height:14px}
+.drag-handle{cursor:grab;color:#d0c4b0;display:flex;align-items:center;padding:4px 2px;transition:color .15s;background:none;border:none}
+.drag-handle:hover{color:var(--sage)}
+.drag-handle:active{cursor:grabbing}
+.drag-handle svg{width:13px;height:13px;flex-shrink:0}
+.plant-row.dragging{opacity:.35;background:rgba(107,143,94,.08)}
+.plant-row.drag-over{border-top:2px solid var(--moss);background:rgba(107,143,94,.06)}
+
+/* LEGEND */
+.legend{max-width:1060px;margin:14px auto 0;padding:0 32px;display:flex;gap:18px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--sage)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--forest);color:#fff;padding:9px 22px;border-radius:30px;font-size:.81rem;font-weight:500;box-shadow:0 5px 20px rgba(45,74,45,.3);pointer-events:none;transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .28s;opacity:0;z-index:999;max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,26,20,.45);z-index:100;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex;animation:fadeIn .18s ease}
+.modal{background:var(--cream);border-radius:16px;padding:28px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(45,74,45,.25);margin:auto}
+.modal h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--forest);margin-bottom:4px}
+.modal-sub{font-size:.76rem;color:var(--sage);margin-bottom:22px}
+.form-section{font-size:.76rem;color:var(--forest);font-weight:500;margin:16px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:.74rem;font-weight:500;color:var(--forest);margin-bottom:5px;letter-spacing:.02em}
+.form-row input,.form-row textarea{width:100%;padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);outline:none;transition:border-color .15s}
+.form-row textarea{resize:vertical;min-height:72px;line-height:1.5}
+.form-row input:focus,.form-row textarea:focus{border-color:var(--sage)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-pair{display:flex;gap:8px}
+.form-row-pair input{flex:1}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.btn-cancel{font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;padding:9px 20px;border:1.5px solid var(--line);background:transparent;color:var(--sage);border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-cancel:hover{background:var(--parchment)}
+.btn-save{font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;padding:9px 22px;border:none;background:var(--forest);color:#fff;border-radius:8px;cursor:pointer;transition:background .15s}
+.btn-save:hover{background:var(--moss)}
+.confirm-modal{background:var(--cream);border-radius:14px;padding:24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(45,74,45,.25);text-align:center;margin:auto}
+.confirm-modal p{font-size:.88rem;color:var(--ink);margin:8px 0 20px;line-height:1.5}
+.confirm-modal h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--forest)}
+.confirm-actions{display:flex;gap:10px;justify-content:center}
+.btn-confirm-del{font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;padding:9px 20px;border:none;background:var(--red-dot);color:#fff;border-radius:8px;cursor:pointer}
+.btn-confirm-del:hover{opacity:.85}
+
+/* POT CALCULATOR */
+.pot-calc{background:rgba(107,143,94,.07);border:1px solid rgba(107,143,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.pot-calc-title{font-size:.72rem;font-weight:500;color:var(--forest);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pot-calc-title svg{width:13px;height:13px;flex-shrink:0;color:var(--sage)}
+.pot-calc-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:8px}
+.pot-calc-row .form-row{flex:1;margin-bottom:0}
+.btn-calc{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;padding:8px 14px;border:none;background:var(--moss);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0}
+.btn-calc:hover{background:var(--forest)}
+.calc-result{font-size:.76rem;color:var(--forest);margin-top:6px;min-height:18px;line-height:1.5}
+.calc-result span{font-weight:500}
+.calc-note{font-size:.69rem;color:var(--sage)}
+
+/* ── MOBILE SEASON BAR ── */
+.mobile-season-bar{display:none;padding:10px 12px 0;max-width:1060px;margin:0 auto}
+.mobile-season-scroll{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.mobile-season-scroll::-webkit-scrollbar{display:none}
+
+@media(max-width:720px){
+  /* LAYOUT RESETS */
+  header{padding:14px 14px 0;gap:8px}
+  .header-right{display:none}
+  .mobile-season-bar{display:block}
+  .tab-bar{padding:0 10px;margin-top:14px}
+  .panel-wrap{padding:0}
+  .data-bar{padding:4px 10px;gap:6px}
+  .legend{padding:0 12px;margin-top:10px;gap:12px}
+
+  /* GRID HEADER: hidden on mobile — cards handle all info */
+  .grid-header{display:none!important}
+
+  /* PLANT CARD LAYOUT */
+  .plant-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 38px 38px;
+    grid-template-rows:auto auto auto;
+    grid-template-areas:
+      "name name edit del"
+      "lw   lw   lf   lf"
+      "wb   wb   fb   fb";
+    padding:14px 14px 12px;
+    gap:8px 6px;
+    border-radius:0;
+    border-bottom:1px solid var(--line);
+    border-left:none;border-right:none;
+  }
+  /* drag handle */
+  .plant-row > *:nth-child(1){display:none!important}
+  /* plant name */
+  .plant-row > *:nth-child(2){grid-area:name;align-self:center}
+  /* water freq */
+  .plant-row > *:nth-child(3){display:none!important}
+  /* fert freq */
+  .plant-row > *:nth-child(4){display:none!important}
+  /* last water */
+  .plant-row > *:nth-child(5){
+    grid-area:lw;display:block!important;
+    text-align:left;font-size:.71rem;color:var(--sage);
+  }
+  /* last fert */
+  .plant-row > *:nth-child(6){
+    grid-area:lf;display:block!important;
+    text-align:left;font-size:.71rem;color:var(--sage);
+  }
+  /* water btn-col */
+  .plant-row > *:nth-child(7){grid-area:wb}
+  /* fert btn-col */
+  .plant-row > *:nth-child(8){grid-area:fb}
+  /* edit icon */
+  .plant-row > *:nth-child(9){grid-area:edit;display:flex!important;justify-content:center}
+  /* dup — hidden on mobile */
+  .plant-row > *:nth-child(10){display:none!important}
+  /* move — hidden on mobile */
+  .plant-row > *:nth-child(11){display:none!important}
+  /* del icon */
+  .plant-row > *:nth-child(12){grid-area:del;display:flex!important;justify-content:center}
+
+  /* Last cell labels via ::before */
+  .plant-row > *:nth-child(5)::before{content:'💧 ';font-size:.7rem}
+  .plant-row > *:nth-child(6)::before{content:'🌱 ';font-size:.7rem}
+
+  /* BIG TAP BUTTONS */
+  .btn-col{display:flex;align-items:stretch}
+  .btn-w,.btn-f{
+    flex:1;padding:12px 8px;font-size:.86rem;
+    border-radius:12px;text-align:center;
+    justify-content:center;min-height:46px;
+    display:flex;align-items:center;
+  }
+
+  /* Icon buttons bigger tap area */
+  .icon-btn{width:38px;height:38px;border-radius:8px}
+  .icon-btn svg{width:16px;height:16px}
+
+  /* Plant name */
+  .plant-name{font-size:.93rem}
+  .last-cell b{font-size:.8rem}
+  .last-cell i{font-size:.69rem}
+
+  /* IRRIGATION BAR */
+  .irr-bar{flex-wrap:wrap;gap:8px;padding:10px 14px}
+  .irr-info{font-size:.72rem}
+  .btn-water-all{
+    margin-left:0;width:100%;padding:12px;
+    border-radius:12px;font-size:.84rem;
+    text-align:center;
+  }
+
+  /* TAB PANEL */
+  .tab-panel{border-radius:0;border-left:none;border-right:none}
+  .tab-btn{padding:8px 16px;font-size:.84rem}
+  .btn-add-plant{font-size:.76rem;padding:7px 12px}
+
+  /* DATA BAR buttons */
+  .btn-export,.btn-import,.btn-cloud{font-size:.71rem;padding:5px 10px}
+
+  /* FORMS */
+  .form-grid{grid-template-columns:1fr}
+  .modal{padding:20px 16px}
+
+  /* TOAST */
+  #toast{max-width:calc(100vw - 32px);font-size:.79rem}
+
+  /* Tab panel top rounded corners only on first panel */
+  #tab-balcone.active,#tab-interno.active{border-radius:0 12px 12px 12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <div class="header-leaf">🌿</div>
+    <div class="header-text">
+      <h1>Plant Tracker</h1>
+      <p>Irrigazione &amp; Concimazione — Milano</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="sync-badge"><span class="sync-dot"></span><span id="syncinfo">Caricamento…</span></div>
+    <div class="season-bar">
+      <span class="season-label">Stagione:</span>
+      <button class="season-btn" data-s="p" onclick="setSeason('p',true)">🌱 Primavera</button>
+      <button class="season-btn" data-s="e" onclick="setSeason('e',true)">☀️ Estate</button>
+      <button class="season-btn" data-s="a" onclick="setSeason('a',true)">🍂 Autunno</button>
+      <button class="season-btn" data-s="i" onclick="setSeason('i',true)">❄️ Inverno</button>
+      <span class="season-auto" id="season-auto">(auto)</span>
+    </div>
+  </div>
+</header>
+
+<!-- MOBILE SEASON BAR -->
+<div class="mobile-season-bar">
+  <div class="mobile-season-scroll">
+    <span class="season-label" style="font-size:.72rem;color:var(--sage);white-space:nowrap;align-self:center">Stagione:</span>
+    <button class="season-btn" data-s="p" onclick="setSeason('p',true)">🌱 Primavera</button>
+    <button class="season-btn" data-s="e" onclick="setSeason('e',true)">☀️ Estate</button>
+    <button class="season-btn" data-s="a" onclick="setSeason('a',true)">🍂 Autunno</button>
+    <button class="season-btn" data-s="i" onclick="setSeason('i',true)">❄️ Inverno</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-bar-left">
+    <button class="tab-btn active" id="tab-btn-balcone" onclick="sw('balcone',this)">🌸 Balcone</button>
+    <button class="tab-btn" id="tab-btn-interno" onclick="sw('interno',this)">🪴 Interno</button>
+  </div>
+  <button class="btn-add-plant" onclick="openAddModal()">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+    Aggiungi pianta
+  </button>
+</div>
+
+<div class="data-bar">
+  <button class="btn-cloud" id="btn-cloud" onclick="openCloudModal()">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11a3 3 0 10-1.5-5.6A4 4 0 104 10h8z"/></svg>
+    <span id="btn-cloud-label">Sync cloud</span>
+  </button>
+  <button class="btn-import" onclick="openSnapshotsModal()" title="Ripristina da uno snapshot automatico">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3a5 5 0 100 10A5 5 0 008 3z"/><path d="M8 5v3l2 1"/></svg>
+    Snapshot
+  </button>
+  <button class="btn-export" onclick="exportData()" title="Scarica un file di backup">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>
+    Esporta
+  </button>
+  <button class="btn-import" onclick="document.getElementById('import-file').click()" title="Ripristina da un file di backup">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2M5 5l3-3 3 3"/><path d="M3 12h10"/></svg>
+    Importa
+  </button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+</div>
+
+<div class="panel-wrap">
+  <div id="tab-balcone" class="tab-panel active">
+    <!-- IRRIGATION BAR -->
+    <div class="irr-bar">
+      <div class="irr-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2C8 2 3 7 3 10a5 5 0 0010 0C13 7 8 2 8 2z"/></svg>
+        Irrigazione automatica
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="irr-toggle" onchange="toggleIrrigation()">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="irr-status" id="irr-status">Spenta</span>
+      <div class="irr-info" id="irr-info"></div>
+      <button class="btn-water-all" id="btn-water-all" onclick="waterAll()">💧 Annaffia tutto</button>
+    </div>
+    <div id="fert-banner-balcone"></div>
+    <div class="grid-header">
+      <div></div>
+      <div>Pianta</div>
+      <div class="gh-c gh-fw">Acqua (stagione)</div>
+      <div class="gh-c gh-ff">Concime</div>
+      <div class="gh-c gh-lw">Ultima acqua</div>
+      <div class="gh-c gh-lf">Ultimo concime</div>
+      <div class="gh-c">Acqua</div>
+      <div class="gh-c">Concime</div>
+      <div></div><div></div><div></div><div></div>
+    </div>
+    <div id="rows-balcone"></div>
+  </div>
+
+  <div id="tab-interno" class="tab-panel">
+    <div id="fert-banner-interno"></div>
+    <div class="grid-header">
+      <div></div>
+      <div>Pianta</div>
+      <div class="gh-c gh-fw">Acqua (stagione)</div>
+      <div class="gh-c gh-ff">Concime</div>
+      <div class="gh-c gh-lw">Ultima acqua</div>
+      <div class="gh-c gh-lf">Ultimo concime</div>
+      <div class="gh-c">Acqua</div>
+      <div class="gh-c">Concime</div>
+      <div></div><div></div><div></div><div></div>
+    </div>
+    <div id="rows-interno"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg"><span class="leg-dot" style="background:var(--green-dot)"></span>Nei tempi</div>
+  <div class="leg"><span class="leg-dot" style="background:var(--orange-dot)"></span>Da fare presto</div>
+  <div class="leg"><span class="leg-dot" style="background:var(--red-dot)"></span>In ritardo / mai fatto</div>
+</div>
+<div id="toast"></div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <h2>Aggiungi pianta</h2>
+    <p class="modal-sub" id="modal-add-sub"></p>
+    <div class="pot-calc">
+      <div class="pot-calc-title">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10l-1 7H4L3 5z"/><path d="M2 5h12"/><path d="M6 5V3.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V5"/></svg>
+        Calcola volume da misure del vaso
+      </div>
+      <div class="pot-calc-row">
+        <div class="form-row"><label>Diam. bocca (cm)</label><input type="number" id="fD" min="1" max="200" placeholder="es. 20" oninput="autoBottom('f')"></div>
+        <div class="form-row"><label>Diam. fondo (cm)</label><input type="number" id="fB" min="1" max="200" placeholder="es. 14" oninput="this._userEdited=!!this.value"></div>
+        <div class="form-row"><label>Altezza (cm)</label><input type="number" id="fH" min="1" max="200" placeholder="es. 18"></div>
+        <button class="btn-calc" onclick="calcVol('f')">Calcola</button>
+      </div>
+      <div class="calc-result" id="fR"></div>
+      <input type="hidden" id="f-potD"><input type="hidden" id="f-potB"><input type="hidden" id="f-potH">
+    </div>
+    <div class="form-row">
+      <label>Nome pianta</label>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input type="text" id="f-name" placeholder="es. Rosa rampicante" autocomplete="off" style="flex:1">
+        <button onclick="aiAutofill()" id="btn-ai-fill" style="font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;padding:8px 14px;border:none;background:var(--forest);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap;transition:opacity .2s;display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M8 2l1.5 3.5L13 7l-3.5 1.5L8 12l-1.5-3.5L3 7l3.5-1.5z"/></svg>
+          Compila con AI
+        </button>
+      </div>
+      <div id="ai-fill-status" style="font-size:.72rem;color:var(--sage);margin-top:5px;min-height:16px"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Volume acqua (ml) <span style="font-size:.68rem;color:var(--sage);font-weight:400">o calcolato sopra</span></label><input type="number" id="f-vol" min="10" max="20000" placeholder="es. 500"></div>
+      <div class="form-row"><label>Tipo di concime</label><input type="text" id="f-ftype" placeholder="es. Fiorite" autocomplete="off"></div>
+    </div>
+    <div class="form-row"><label>Note metodo annaffiatura</label><textarea id="f-notes" placeholder="es. Annaffia dal basso, evita le foglie…"></textarea></div>
+    <div class="form-row"><label>Note potatura ✂️</label><textarea id="f-pruning" placeholder="es. Pota dopo la fioritura, accorcia di un terzo…"></textarea></div>
+    <div class="form-row"><label>Dose concime</label><input type="text" id="f-fertdose" placeholder="es. 5ml per 1L · su substrato umido" autocomplete="off"></div>
+    <p class="form-section">Frequenza acqua per stagione (giorni min – max)</p>
+    <div class="form-grid">
+      <div class="form-row"><label>🌱 Primavera</label><div class="form-row-pair"><input type="number" id="f-pwn" min="1" max="365" placeholder="min"><input type="number" id="f-pwx" min="1" max="365" placeholder="max"></div></div>
+      <div class="form-row"><label>☀️ Estate</label><div class="form-row-pair"><input type="number" id="f-ewn" min="1" max="365" placeholder="min"><input type="number" id="f-ewx" min="1" max="365" placeholder="max"></div></div>
+      <div class="form-row"><label>🍂 Autunno</label><div class="form-row-pair"><input type="number" id="f-awn" min="1" max="365" placeholder="min"><input type="number" id="f-awx" min="1" max="365" placeholder="max"></div></div>
+      <div class="form-row"><label>❄️ Inverno</label><div class="form-row-pair"><input type="number" id="f-iwn" min="1" max="365" placeholder="min"><input type="number" id="f-iwx" min="1" max="365" placeholder="max"></div></div>
+    </div>
+    <p class="form-section">Frequenza concime (giorni, solo stagione attiva)</p>
+    <div class="form-grid">
+      <div class="form-row"><label>Ogni min (gg)</label><input type="number" id="f-fn" min="1" max="365" placeholder="es. 14"></div>
+      <div class="form-row"><label>Ogni max (gg)</label><input type="number" id="f-fx" min="1" max="365" placeholder="es. 21"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-add')">Annulla</button>
+      <button class="btn-save" onclick="savePlant()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h2>Modifica pianta</h2>
+    <p class="modal-sub" id="modal-edit-sub"></p>
+    <div class="pot-calc">
+      <div class="pot-calc-title">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h10l-1 7H4L3 5z"/><path d="M2 5h12"/><path d="M6 5V3.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V5"/></svg>
+        Calcola volume da misure del vaso
+      </div>
+      <div class="pot-calc-row">
+        <div class="form-row"><label>Diam. bocca (cm)</label><input type="number" id="eD" min="1" max="200" placeholder="es. 20" oninput="autoBottom('e')"></div>
+        <div class="form-row"><label>Diam. fondo (cm)</label><input type="number" id="eB" min="1" max="200" placeholder="es. 14" oninput="this._userEdited=!!this.value"></div>
+        <div class="form-row"><label>Altezza (cm)</label><input type="number" id="eH" min="1" max="200" placeholder="es. 18"></div>
+        <button class="btn-calc" onclick="calcVol('e')">Calcola</button>
+      </div>
+      <div class="calc-result" id="eR"></div>
+      <input type="hidden" id="e-potD"><input type="hidden" id="e-potB"><input type="hidden" id="e-potH">
+    </div>
+    <div class="form-row"><label>Nome pianta</label><input type="text" id="e-name" autocomplete="off"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Volume acqua (ml) <span style="font-size:.68rem;color:var(--sage);font-weight:400">o calcolato sopra</span></label><input type="number" id="e-vol" min="10" max="20000"></div>
+      <div class="form-row"><label>Tipo di concime</label><input type="text" id="e-ftype" autocomplete="off"></div>
+    </div>
+    <div class="form-row"><label>Note metodo annaffiatura</label><textarea id="e-notes"></textarea></div>
+    <div class="form-row"><label>Note potatura ✂️</label><textarea id="e-pruning"></textarea></div>
+    <div class="form-row"><label>Dose concime</label><input type="text" id="e-fertdose" autocomplete="off"></div>
+    <p class="form-section">Frequenza acqua per stagione (giorni min – max)</p>
+    <div class="form-grid">
+      <div class="form-row"><label>🌱 Primavera</label><div class="form-row-pair"><input type="number" id="e-pwn" min="1" max="365"><input type="number" id="e-pwx" min="1" max="365"></div></div>
+      <div class="form-row"><label>☀️ Estate</label><div class="form-row-pair"><input type="number" id="e-ewn" min="1" max="365"><input type="number" id="e-ewx" min="1" max="365"></div></div>
+      <div class="form-row"><label>🍂 Autunno</label><div class="form-row-pair"><input type="number" id="e-awn" min="1" max="365"><input type="number" id="e-awx" min="1" max="365"></div></div>
+      <div class="form-row"><label>❄️ Inverno</label><div class="form-row-pair"><input type="number" id="e-iwn" min="1" max="365"><input type="number" id="e-iwx" min="1" max="365"></div></div>
+    </div>
+    <p class="form-section">Frequenza concime (giorni, solo stagione attiva)</p>
+    <div class="form-grid">
+      <div class="form-row"><label>Ogni min (gg)</label><input type="number" id="e-fn" min="1" max="365"></div>
+      <div class="form-row"><label>Ogni max (gg)</label><input type="number" id="e-fx" min="1" max="365"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-edit')">Annulla</button>
+      <button class="btn-save" onclick="applyEdit()">Salva modifiche</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLOUD MODAL -->
+<div class="modal-overlay" id="modal-cloud">
+  <div class="cloud-modal">
+    <h2>☁️ Sync con JSONBin</h2>
+
+    <!-- Shown when NOT connected -->
+    <div id="cloud-disconnected-view">
+      <div class="cloud-steps">
+        1. Vai su <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> e crea un account gratuito<br>
+        2. Vai in <b>API Keys</b> e copia la tua <b>Master Key</b><br>
+        3. Incollala qui sotto — il tracker creerà automaticamente un bin privato
+      </div>
+      <div class="form-row">
+        <label>JSONBin Master Key</label>
+        <input type="password" id="cloud-apikey" placeholder="$2a$10$..." autocomplete="off">
+      </div>
+      <div class="form-row" id="binid-row" style="margin-top:4px">
+        <label>Bin ID esistente <span style="font-weight:400;color:var(--sage)">(opzionale — solo su nuovi dispositivi)</span></label>
+        <input type="text" id="cloud-binid" placeholder="es. 64a3f2b8e3a82a1b2c3d4e5f" autocomplete="off" style="font-family:monospace;font-size:.8rem">
+        <div style="font-size:.69rem;color:var(--sage);margin-top:4px">Lascia vuoto sul primo dispositivo. Inseriscilo sugli altri per collegarti allo stesso bin.</div>
+      </div>
+      <div class="cloud-error" id="cloud-error"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-cloud')">Annulla</button>
+        <button class="btn-save" id="btn-cloud-connect" onclick="connectCloud()">Connetti</button>
+      </div>
+    </div>
+
+    <!-- Shown when connected -->
+    <div id="cloud-connected-view" style="display:none">
+      <div style="background:rgba(58,138,58,.08);border:1px solid rgba(58,138,58,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:.74rem;color:var(--moss);font-weight:500;margin-bottom:10px">✅ Cloud attivo</div>
+        <div style="font-size:.73rem;color:var(--forest);margin-bottom:6px">
+          <b>Bin ID</b> — copialo sugli altri dispositivi:
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <code id="cloud-binid-display" style="font-size:.78rem;background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:7px 10px;flex:1;word-break:break-all;color:var(--ink)"></code>
+          <button onclick="copyBinId()" style="font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:7px 12px;border:none;background:var(--moss);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap" id="btn-copy-binid">Copia</button>
+        </div>
+      </div>
+      <div class="cloud-error" id="cloud-error-connected"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-cloud')">Chiudi</button>
+        <button class="btn-cancel" style="color:var(--red-dot);border-color:rgba(192,57,43,.3)" onclick="disconnectCloud()">Disconnetti</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SNAPSHOTS MODAL -->
+<div class="modal-overlay" id="modal-snapshots">
+  <div class="modal">
+    <h2>🕐 Snapshot automatici</h2>
+    <p class="modal-sub">Gli ultimi 7 snapshot giornalieri salvati automaticamente. Clicca su uno per ripristinarlo.</p>
+    <div id="snapshots-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-snapshots')">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="confirm-modal">
+    <h3>Rimuovi pianta</h3>
+    <p id="confirm-text"></p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-confirm')">Annulla</button>
+      <button class="btn-confirm-del" id="btn-confirm-del">Rimuovi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SK = 'plant_tracker_v7';
+
+function fmtVol(ml) {
+  if (!ml) return '';
+  if (ml >= 1000) return (ml % 1000 === 0 ? (ml/1000) : (ml/1000).toFixed(1)) + 'L';
+  return ml + 'ml';
+}
+
+var DEFAULT_PLANTS = {
+  balcone: [
+    {id:'gerani',    n:'Gerani',          vol:400,  notes:'Abbondante ma senza ristagni nel sottovaso — svuota dopo 30 min. Evita di bagnare foglie e fiori.',                sw:{p:{n:5,x:7},  e:{n:2,x:3},  a:{n:5,x:7},  i:{n:7,x:10}},  potD:22,potB:16,potH:20,fertDose:'5ml per 1L · ogni annaffiatura con concime',ft:'Fiorite',    fn:7,  fx:10, pruning:'Pota drasticamente a febbraio-marzo lasciando 2-3 nodi per ramo. Durante la stagione rimuovi i fiori appassiti regolarmente per favorire la fioritura continua.'},
+    {id:'gelsomino', n:'Falso gelsomino', vol:700,  notes:'Terreno leggermente umido, ben drenato. Evita ristagni. Sotto -5C proteggi il vaso.',                              sw:{p:{n:3,x:4},  e:{n:1,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:28,potB:20,potH:26,fertDose:'5ml per 1L · su substrato umido',ft:'Fiorite',    fn:14, fx:14, pruning:'Pota dopo la fioritura primaverile. Rimuovi i rami che escono dalla forma e accorcia quelli lunghi di un terzo. Dirada i rami più vecchi per favorire quelli nuovi.'},
+    {id:'eucalipto', n:'Eucalipto',       vol:1500, notes:'Lascia asciugare i primi cm tra un annaffiatura e l altra. Teme il ristagno piu della siccita.',                   sw:{p:{n:4,x:5},  e:{n:3,x:3},  a:{n:7,x:7},  i:{n:21,x:28}}, potD:35,potB:26,potH:35,fertDose:'5ml per 1L · su substrato umido',ft:'Universale', fn:21, fx:28, pruning:'Pota in primavera per controllare le dimensioni — ricaccia vigoroso anche dopo potature drastiche. Taglia sopra un nodo fogliare.'},
+    {id:'loropet',   n:'Loropetalum ⚠',  vol:600,  notes:'Non lasciarlo mai completamente asciutto in agosto. Usa terriccio specifico per acidofile.',                        sw:{p:{n:3,x:3},  e:{n:1,x:2},  a:{n:5,x:5},  i:{n:21,x:28}}, potD:28,potB:20,potH:28,fertDose:'5ml per 1L acidofile · mai universale',ft:'Acidofile',  fn:14, fx:21, pruning:'Pota dopo la fioritura primaverile accorciando i rami di un terzo. Rimuovi i rami che crescono verso l\'interno per migliorare l\'arieggiamento.'},
+    {id:'fotinia',   n:'Fotinia',         vol:600,  notes:'Non bagnare il fogliame. Sensibile all Entomosporium (macchie marroni fungine). Garantisci ventilazione.',          sw:{p:{n:3,x:4},  e:{n:2,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:30,potB:22,potH:28,fertDose:'5ml per 1L · su substrato umido',ft:'Universale', fn:21, fx:21, pruning:'Pota in primavera dopo la fioritura accorciando i rami nuovi di circa la metà. Non bagnare le foglie durante la potatura — favorisce le malattie fungine.'},
+    {id:'mirto',     n:'Mirto',           vol:500,  notes:'Bio obbligatorio se usi bacche e foglie in cucina. Teme il freddo in vaso sotto -3/-5C.',                           sw:{p:{n:4,x:5},  e:{n:2,x:3},  a:{n:7,x:7},  i:{n:28,x:35}}, potD:24,potB:17,potH:22,fertDose:'granulare bio: 20-30g per vaso da 20cm',ft:'Bio',        fn:21, fx:28, pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature anche drastiche. Rimuovi i rami che crescono verso l\'interno.'},
+    {id:'oleandro',  n:'Oleandro',        vol:1000, notes:'Tutte le parti sono tossiche. Non bruciare mai i rami potati. Sotto -5C copri il vaso.',                            sw:{p:{n:3,x:4},  e:{n:1,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:32,potB:24,potH:30,fertDose:'5-10ml per 1L · pianta molto esigente',ft:'Fiorite',    fn:14, fx:14, pruning:'Pota dopo la fioritura estiva accorciando i rami di un terzo. Usa sempre guanti — tutto è tossico. Non bruciare mai i rami di scarto.'},
+    {id:'ginepro',   n:'Ginepro',         vol:400,  notes:'Soffre piu per eccesso di cure che per mancanza. Troppo azoto rende la crescita disordinata. Teme il ristagno.',   sw:{p:{n:5,x:6},  e:{n:4,x:4},  a:{n:7,x:10}, i:{n:35,x:42}}, potD:24,potB:17,potH:22,fertDose:'5ml per 1L · oppure granulare a marzo',ft:'Conifere',   fn:28, fx:42, pruning:'Pota leggermente in primavera solo i rametti verdi dell\'anno. Mai tagliare nel legno vecchio — non ricresce. Usa cesoie da bonsai per precisione.'},
+    {id:'alloro',    n:'Alloro',          vol:800,  notes:'Rinvasa ogni 2-3 anni. Teme ristagni e venti gelidi. Foglie piu sottili e profumate del lauroceraso.',              sw:{p:{n:4,x:5},  e:{n:2,x:3},  a:{n:7,x:7},  i:{n:21,x:28}}, potD:30,potB:22,potH:28,fertDose:'granulare bio: 20-30g per vaso da 20cm',ft:'Bio',        fn:21, fx:28, pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature drastiche. Rimuovi i polloni alla base per mantenere un fusto pulito.'}
+  ],
+  interno: [
+    {id:'portulac',  n:'Portulacaria afra',vol:150, notes:'Annaffia solo quando il terreno e completamente asciutto. Foglioline turgide = sta bene; avvizzite = annaffia.',    sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:49}}, potD:14,potB:10,potH:12,fertDose:'2.5ml per 1L (mezza dose) · max ogni 6 sett.',ft:'Succulente 1/2d',fn:28,fx:42, pruning:'Pota liberamente in primavera per dare forma — risponde bene alle potature anche drastiche. Ottima come bonsai.'},
+    {id:'pachira',   n:'Pachira',          vol:400, notes:'Il terreno deve asciugarsi a meta tra un annaffiatura e l altra. Metti una vaschetta con acqua e sassi sotto.',     sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:14,x:21},i:{n:14,x:21}}, potD:20,potB:14,potH:18,fertDose:'5ml per 1L · su substrato leggermente umido',ft:'Universale', fn:14, fx:21, pruning:'Pota in primavera sopra un nodo per controllare la forma. Evita di toccare il tronco intrecciato. Accorcia i rami lunghi di un terzo.'},
+    {id:'kentia',    n:'Kentia',           vol:500, notes:'Non tolera ne siccita prolungata ne ristagno. Nebulizza le foglie — le punte ingialliscono se l aria e troppo secca.',sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:14,x:21},i:{n:14,x:21}},  potD:26,potB:19,potH:24,fertDose:'5ml per 1L · nebulizza anche le foglie',ft:'Palme',      fn:21, fx:21, pruning:'Non potare mai le foglie verdi, anche se pendenti. Rimuovi solo quelle completamente secche tagliando il picciolo alla base, mai a metà.'},
+    {id:'sansev',    n:'Sansevieria',      vol:200, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.',   sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, potD:18,potB:13,potH:20,fertDose:'5ml per 1L · mezza dose consigliata in estate',ft:'Universale', fn:42, fx:56, pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.'},
+    {id:'agave',     n:'Agave',            vol:250, notes:'Tollera il secco meglio del freddo. Tienila lontana da correnti d aria fredda.',                                    sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:28,x:28}}, potD:20,potB:14,potH:18,fertDose:'2.5ml per 1L (mezza dose) · solo estate',ft:'Succulente', fn:28, fx:42, pruning:'Rimuovi solo le foglie esterne completamente secche tagliando alla base. Usa guanti resistenti — le punte sono affilate.'},
+    {id:'pothos',    n:'Pothos',           vol:300, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.',             sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:10,x:14},i:{n:14,x:14}}, potD:16,potB:11,potH:14,fertDose:'5ml per 1L · su substrato umido',ft:'Universale', fn:14, fx:21, pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.'},
+    {id:'spati',     n:'Spatifillo',       vol:350, notes:'Annaffia dal basso: vaso in piatto d acqua per 20 min poi svuota. Non lasciarlo mai completamente asciutto.',       sw:{p:{n:5,x:7},  e:{n:5,x:7},  a:{n:7,x:10}, i:{n:10,x:10}}, potD:18,potB:13,potH:16,fertDose:'5ml per 1L · diluire bene, sensibile ai sali',ft:'Fiorite',    fn:14, fx:14, pruning:'Rimuovi i fiori appassiti tagliando lo stelo alla base. Rimuovi le foglie ingiallite. Nessuna potatura strutturale.'},
+    {id:'beaucarn',  n:'Beaucarnea',       vol:200, notes:'Il bulbo alla base accumula acqua — non annaffiare prima che sia completamente asciutto. Il ristagno fa marcire.',  sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:42}}, potD:22,potB:16,potH:22,fertDose:'2.5ml per 1L (mezza dose) · solo apr-set',ft:'Succulente', fn:28, fx:42, pruning:'Rimuovi solo le foglie secche tirandole delicatamente verso il basso. Non potare il fusto — non ricresce.'},
+    {id:'peperon',   n:'Peperomia serpens',vol:120, notes:'Aspetta sempre che il terreno sia ben asciutto. Usa concime a meta dose — e sensibile ai sali minerali.',           sw:{p:{n:10,x:14},e:{n:10,x:14},a:{n:14,x:21},i:{n:21,x:21}}, potD:12,potB:9,potH:10,fertDose:'2.5ml per 1L (mezza dose) · molto sensibile ai sali',ft:'Universale 1/2d',fn:21,fx:28, pruning:'Rimuovi foglie secche o ingiallite. Accorcia i rami troppo lunghi in primavera per mantenere la pianta compatta.'},
+    {id:'ciclamino', n:'Ciclamino',        vol:200, notes:'Annaffia dal basso: piatto d acqua per 20-30 min poi svuota. Non bagnare mai foglie, fiori o centro. In estate quasi stop.',sw:{p:{n:5,x:7},e:{n:21,x:28},a:{n:5,x:7},i:{n:5,x:7}},potD:14,potB:10,potH:10,fertDose:'5ml per 1L · solo durante la fioritura (ott-mar)',ft:'Fiorite',fn:14,fx:14, pruning:'Rimuovi fiori e foglie appassite tirando il picciolo con un movimento rotatorio (non tagliare). In estate taglia tutto a raso e lascia riposare.'}
+  ]
+};
+
+var DEFAULT_RECORDS = {
+  gelsomino:{water:null,fert:'2026-03-16T09:00:00.000Z'},
+  eucalipto: {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  loropet:   {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  fotinia:   {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  oleandro:  {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  ginepro:   {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  pachira:   {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  kentia:    {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  sansev:    {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  pothos:    {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  spati:     {water:null,fert:'2026-03-16T09:00:00.000Z'},
+  ciclamino: {water:null,fert:'2026-03-16T09:00:00.000Z'}
+};
+
+var STATE = {}, lastSaved = null, currentTab = 'balcone', currentSeason = null, manualSeason = false;
+var irrigationOn = false;
+var IRR_SK = 'pt_irrigation_on';
+var FERT_ACTIVE = {p:true, e:true, a:true, i:false};
+
+// ── SEASON ──
+function autoSeason() { var m = new Date().getMonth()+1; if(m>=3&&m<=5)return'p'; if(m>=6&&m<=8)return'e'; if(m>=9&&m<=11)return'a'; return'i'; }
+function getSeason() { return currentSeason || autoSeason(); }
+function setSeason(s, manual) {
+  if (manual) { currentSeason = s; manualSeason = true; }
+  else { currentSeason = null; manualSeason = false; }
+  document.querySelectorAll('.season-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.s === getSeason()); });
+  document.getElementById('season-auto').style.display = manualSeason ? 'none' : 'inline';
+  renderAll();
+}
+
+// ── STORAGE ──
+var SNAP_SK = 'pt_snapshots';
+var SNAP_MAX = 7;
+
+function saveSnapshot() {
+  try {
+    var snaps = JSON.parse(localStorage.getItem(SNAP_SK) || '[]');
+    var today = new Date().toISOString().slice(0,10);
+    // Only one snapshot per day — replace if same day
+    snaps = snaps.filter(function(s){ return s.date !== today; });
+    var payload = JSON.parse(JSON.stringify(STATE));
+    delete payload._lastSaved;
+    snaps.unshift({ date: today, ts: new Date().toISOString(), data: payload });
+    if (snaps.length > SNAP_MAX) snaps = snaps.slice(0, SNAP_MAX);
+    localStorage.setItem(SNAP_SK, JSON.stringify(snaps));
+  } catch(e) {}
+}
+
+function openSnapshotsModal() {
+  var snaps = [];
+  try { snaps = JSON.parse(localStorage.getItem(SNAP_SK) || '[]'); } catch(e) {}
+  var list = document.getElementById('snapshots-list');
+  if (!snaps.length) {
+    list.innerHTML = '<div style="font-size:.8rem;color:var(--sage);text-align:center;padding:16px">Nessuno snapshot disponibile ancora.<br>Vengono creati automaticamente ad ogni salvataggio.</div>';
+  } else {
+    list.innerHTML = snaps.map(function(s, i) {
+      var d = new Date(s.ts);
+      var plants = (s.data.plants ? (s.data.plants.balcone||[]).length + (s.data.plants.interno||[]).length : '?');
+      var label = d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'long'}) + ' alle ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card-bg)">'
+        + '<div><div style="font-size:.82rem;font-weight:500;color:var(--forest)">' + label + '</div>'
+        + '<div style="font-size:.71rem;color:var(--sage);margin-top:2px">' + plants + ' piante</div></div>'
+        + '<button onclick="restoreSnapshot(' + i + ')" style="font-family:\'DM Sans\',sans-serif;font-size:.75rem;font-weight:500;padding:7px 14px;border:none;background:var(--moss);color:#fff;border-radius:8px;cursor:pointer">Ripristina</button>'
+        + '</div>';
+    }).join('');
+  }
+  document.getElementById('modal-snapshots').classList.add('open');
+}
+
+function restoreSnapshot(idx) {
+  var snaps = [];
+  try { snaps = JSON.parse(localStorage.getItem(SNAP_SK) || '[]'); } catch(e) {}
+  if (!snaps[idx]) return;
+  if (!confirm('Ripristinare questo snapshot? I dati attuali verranno sovrascritti.')) return;
+  var s = snaps[idx].data;
+  STATE.plants  = s.plants;
+  STATE.records = s.records || {};
+  save();
+  renderAll();
+  closeModal('modal-snapshots');
+  showToast('✅ Snapshot ripristinato');
+}
+
+function save() {
+  lastSaved = new Date().toISOString(); STATE._lastSaved = lastSaved;
+  try { localStorage.setItem(SK, JSON.stringify(STATE)); } catch(e) {}
+  try { localStorage.setItem(IRR_SK, irrigationOn ? '1' : '0'); } catch(e) {}
+  saveSnapshot();
+  updateSync();
+  cloudPush();
+}
+function load() {
+  try {
+    var raw = localStorage.getItem(SK);
+    if (raw) {
+      STATE = JSON.parse(raw); lastSaved = STATE._lastSaved || null;
+      if (!STATE.plants) STATE.plants = JSON.parse(JSON.stringify(DEFAULT_PLANTS));
+      if (!STATE.records) STATE.records = JSON.parse(JSON.stringify(DEFAULT_RECORDS));
+      for (var g in STATE.plants) {
+        STATE.plants[g] = STATE.plants[g].map(function(p) {
+          if (!p.sw && p.wn) { p.sw = {p:{n:p.wn,x:p.wx},e:{n:p.wn,x:p.wx},a:{n:p.wn,x:p.wx},i:{n:p.wn,x:p.wx}}; }
+          if (p.vol === undefined) p.vol = null;
+          if (!p.notes) p.notes = '';
+          if (!p.pruning) {
+            // Inject pruning from DEFAULT_PLANTS if available
+            var defGrp = DEFAULT_PLANTS[g] || [];
+            var defP = defGrp.find(function(d){ return d.id === p.id; });
+            p.pruning = (defP && defP.pruning) ? defP.pruning : '';
+          }
+          if (!p.fertDose) p.fertDose = '';
+          if (!p.potD) p.potD = null;
+          if (!p.potB) p.potB = null;
+          if (!p.potH) p.potH = null;
+          return p;
+        });
+      }
+    } else {
+      STATE = {plants: JSON.parse(JSON.stringify(DEFAULT_PLANTS)), records: JSON.parse(JSON.stringify(DEFAULT_RECORDS))};
+    }
+  } catch(e) {
+    STATE = {plants: JSON.parse(JSON.stringify(DEFAULT_PLANTS)), records: JSON.parse(JSON.stringify(DEFAULT_RECORDS))};
+  }
+  // Restore irrigation state
+  irrigationOn = localStorage.getItem(IRR_SK) === '1';
+  var toggle = document.getElementById('irr-toggle');
+  if (toggle) toggle.checked = irrigationOn;
+  updateSync();
+}
+
+function fmtSync(iso) {
+  if (!iso) return 'Nessun dato salvato';
+  var d = new Date(iso), diff = Math.round((Date.now()-d)/60000);
+  if (diff<1) return 'Salvato adesso'; if (diff<60) return 'Salvato '+diff+' min fa';
+  var h = Math.floor(diff/60); if (h<24) return 'Salvato '+h+'h fa';
+  return 'Salvato il '+d.toLocaleDateString('it-IT',{day:'numeric',month:'short'})+' alle '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+function updateSync() { var el=document.getElementById('syncinfo'); if(el) el.textContent=fmtSync(lastSaved); }
+function daysSince(iso) { if(!iso) return null; return (Date.now()-new Date(iso).getTime())/86400000; }
+function dotClass(d,mn,mx) { if(d===null)return'dot-red'; if(d<=mn)return'dot-green'; if(d<=mx)return'dot-orange'; return'dot-red'; }
+function fmtDays(d) {
+  if(d===null) return '<i>mai</i>';
+  var n=Math.floor(d); if(n===0)return'<b>oggi</b>'; if(n===1)return'<b>ieri</b>';
+  return '<b>'+n+'gg fa</b>';
+}
+function fmtFreq(n,x) { return n===x ? 'ogni '+n+'gg' : 'ogni '+n+'–'+x+'gg'; }
+function allPlants() { return (STATE.plants.balcone||[]).concat(STATE.plants.interno||[]); }
+function plantGroup(id) {
+  if ((STATE.plants.balcone||[]).find(function(p){return p.id===id;})) return 'balcone';
+  if ((STATE.plants.interno||[]).find(function(p){return p.id===id;})) return 'interno';
+  return null;
+}
+
+// ── IRRIGATION ──
+function getIrrFreq() {
+  var s = getSeason(), minN = Infinity, minPlant = '';
+  (STATE.plants.balcone||[]).forEach(function(p) {
+    var sw = p.sw ? p.sw[s] : {n:p.wn||7};
+    if (sw.n < minN) { minN = sw.n; minPlant = p.n; }
+  });
+  return minN === Infinity ? {n:1, plantName:'—'} : {n:minN, plantName:minPlant};
+}
+
+function toggleIrrigation() {
+  irrigationOn = document.getElementById('irr-toggle').checked;
+  if (irrigationOn) autoWaterCheck();
+  save();
+  updateIrrUI();
+  renderAll();
+  showToast(irrigationOn ? '💧 Irrigazione attivata' : 'Irrigazione disattivata');
+}
+
+// Auto-water: when irrigation is on, water all balcone plants that are overdue
+function autoWaterCheck() {
+  if (!irrigationOn) return;
+  var s = getSeason();
+  var freq = getIrrFreq(); // use most demanding plant's frequency
+  var now = new Date().toISOString();
+  var watered = [];
+  (STATE.plants.balcone||[]).forEach(function(p) {
+    if (!STATE.records[p.id]) STATE.records[p.id] = {water:null, fert:null};
+    var wd = daysSince(STATE.records[p.id].water);
+    // Water if never watered, or overdue based on most demanding freq
+    if (wd === null || wd >= freq.n) {
+      STATE.records[p.id].water = now;
+      watered.push(p.n);
+    }
+  });
+  if (watered.length > 0) {
+    save();
+    showToast('💧 Auto-irrigazione: ' + watered.length + ' piante annaffiate', 3500);
+  }
+}
+
+function updateIrrUI() {
+  var statusEl = document.getElementById('irr-status');
+  var infoEl   = document.getElementById('irr-info');
+  var btnEl    = document.getElementById('btn-water-all');
+  if (!statusEl) return;
+  if (irrigationOn) {
+    var freq = getIrrFreq();
+    statusEl.textContent = 'Accesa'; statusEl.className = 'irr-status on';
+    // count fert due
+    var s = getSeason(), fertDue = 0;
+    if (FERT_ACTIVE[s]) {
+      (STATE.plants.balcone||[]).forEach(function(p) {
+        var fd = daysSince((STATE.records[p.id]||{}).fert);
+        var dc = dotClass(fd, p.fn, p.fx);
+        if (dc === 'dot-red' || dc === 'dot-orange') fertDue++;
+      });
+    }
+    var fertHint = fertDue > 0
+      ? ' &nbsp;·&nbsp; <span style="color:var(--terra);font-weight:500">🌱 '+fertDue+(fertDue===1?' pianta necessita':' piante necessitano')+' concime da diluire</span>'
+      : '';
+    infoEl.innerHTML = 'Ciclo: <strong>ogni '+freq.n+'gg</strong> &nbsp;·&nbsp; pianta guida: <strong>'+freq.plantName+'</strong>'+fertHint;
+    infoEl.classList.add('visible');
+    btnEl.classList.add('visible');
+  } else {
+    statusEl.textContent = 'Spenta'; statusEl.className = 'irr-status';
+    infoEl.classList.remove('visible');
+    btnEl.classList.remove('visible');
+  }
+}
+
+function waterAll() {
+  var now = new Date().toISOString();
+  var plants = STATE.plants.balcone || [];
+  var s = getSeason(), needFert = [];
+  plants.forEach(function(p) {
+    if (!STATE.records[p.id]) STATE.records[p.id] = {water:null, fert:null};
+    STATE.records[p.id].water = now;
+    if (FERT_ACTIVE[s]) {
+      var fd = daysSince(STATE.records[p.id].fert);
+      var dc = dotClass(fd, p.fn, p.fx);
+      if (dc === 'dot-red' || dc === 'dot-orange') needFert.push(p.n);
+    }
+  });
+  save(); renderAll();
+  if (needFert.length > 0) {
+    var names = needFert.slice(0,3).join(', ') + (needFert.length>3 ? ' +altri' : '');
+    showToast('Annaffiate · Concime da diluire: ' + names, 4500);
+  } else {
+    showToast('Annaffiate ' + plants.length + ' piante');
+  }
+}
+
+// ── RENDER ──
+function renderRow(p) {
+  var e = STATE.records[p.id] || {water:null, fert:null};
+  var s = getSeason();
+  var sw = p.sw ? p.sw[s] : {n:p.wn||7, x:p.wx||14};
+  var isBalcone = !!(STATE.plants.balcone||[]).find(function(x){return x.id===p.id;});
+  var irrActive = irrigationOn && isBalcone;
+  var fertOn = FERT_ACTIVE[s];
+
+  // When irrigation active, use shared freq for water dot calc
+  var wFreq = irrActive ? getIrrFreq() : null;
+  var wd = daysSince(e.water), fd = daysSince(e.fert);
+  var effWn = irrActive ? wFreq.n : sw.n;
+  var effWx = irrActive ? wFreq.n : sw.x;
+  var wdc = dotClass(wd, effWn, effWx);
+  var fdc = fertOn ? dotClass(fd, p.fn, p.fx) : 'dot-orange';
+
+  // Status dot: when irr active show fert status (water handled automatically)
+  var statusDot = irrActive ? fdc : wdc;
+
+  var volStr = p.vol ? '<span class="freq-vol">' + fmtVol(p.vol) + ' per annaffiatura</span>' : '';
+  var irrNote = irrActive ? '<span class="freq-irr">freq. irrigaz.: ogni ' + effWn + 'gg</span>' : '';
+  var noteIcon = (p.notes || p.pruning)
+    ? '<span class="note-anchor"><span class="note-icon">i</span><span class="note-tooltip">'
+      + (p.notes ? '<b>💧 Annaffiatura</b><br>' + p.notes : '')
+      + (p.notes && p.pruning ? '<br><br>' : '')
+      + (p.pruning ? '<b>✂️ Potatura</b><br>' + p.pruning : '')
+      + '</span></span>'
+    : '';
+
+  var fertDilute = (irrActive && fertOn)
+    ? '<span class="fert-dilute">diluire nell\'irrigazione</span>'
+    : '';
+  var doseText = fmtFertDose(p);
+  var fertDoseStr = (fertOn && doseText)
+    ? '<span class="fert-dose">' + doseText + '</span>'
+    : '';
+  var fertCell = fertOn
+    ? '<div class="freq-cell">' + p.ft + '<small>' + fmtFreq(p.fn, p.fx) + '</small>' + fertDilute + fertDoseStr + '<span class="fdot ' + fdc + '"></span></div>'
+    : '<div class="freq-cell">' + p.ft + '<span class="fert-inactive"><br>sospeso in inverno</span></div>';
+
+  var waterBtn = irrActive
+    ? '<div class="btn-col"><button class="btn-w" disabled title="Gestita dall\'irrigazione">Acqua</button></div>'
+    : '<div class="btn-col"><button class="btn-w" onclick="doW(\'' + p.id + '\')">Acqua</button></div>';
+
+  var grpForDrag = plantGroup(p.id) || 'balcone';
+  return '<div class="plant-row" id="row-' + p.id + '" draggable="true" data-id="' + p.id + '" data-grp="' + grpForDrag + '">'
+    + '<button class="drag-handle" title="Trascina per riordinare"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="3" y1="11" x2="13" y2="11"/></svg></button>'
+    + '<div class="plant-name-wrap">'
+    +   '<span class="status-dot ' + statusDot + '"></span>'
+    +   '<span class="plant-name">' + p.n + '</span>'
+    +   noteIcon
+    + '</div>'
+    + '<div class="freq-cell">' + fmtFreq(sw.n, sw.x) + irrNote + volStr + '<span class="fdot ' + wdc + '"></span></div>'
+    + fertCell
+    + '<div class="last-cell">' + fmtDays(wd) + '</div>'
+    + '<div class="last-cell">' + fmtDays(fd) + '</div>'
+    + waterBtn
+    + '<div class="btn-col"><button class="btn-f" onclick="doF(\'' + p.id + '\')"' + (!fertOn ? ' disabled title="Sospeso in inverno"' : '') + '>Concime</button></div>'
+    + '<div class="btn-col"><button class="icon-btn" onclick="editPlant(\'' + p.id + '\')" title="Modifica"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 012 2L5 13H3v-2L11.5 2.5z"/></svg></button></div>'
+    + '<div class="btn-col"><button class="icon-btn" onclick="dupPlant(\'' + p.id + '\')" title="Duplica"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="8" height="9" rx="1.5"/><path d="M3 11V3a1 1 0 011-1h8"/></svg></button></div>'
+    + '<div class="btn-col"><button class="icon-btn" onclick="movePlant(\'' + p.id + '\')" title="' + (isBalcone ? 'Sposta in Interno' : 'Sposta in Balcone') + '"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>'
+    + '<div class="btn-col"><button class="icon-btn del" onclick="askDelete(\'' + p.id + '\')" title="Rimuovi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 4 13 4"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M6 7v5M10 7v5"/><path d="M4 4l1 9a1 1 0 001 1h4a1 1 0 001-1l1-9"/></svg></button></div>'
+    + '</div>';
+}
+
+function updateFertBanner(g) {
+  var el = document.getElementById('fert-banner-'+g); if (!el) return;
+  el.innerHTML = !FERT_ACTIVE[getSeason()]
+    ? '<div class="fert-paused"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r=".5" fill="currentColor"/></svg>Concimazione sospesa — riprende a marzo con le prime riprese vegetative</div>'
+    : '';
+}
+
+function renderAll() {
+  document.getElementById('rows-balcone').innerHTML = (STATE.plants.balcone||[]).map(renderRow).join('');
+  document.getElementById('rows-interno').innerHTML = (STATE.plants.interno||[]).map(renderRow).join('');
+  updateFertBanner('balcone'); updateFertBanner('interno');
+  updateIrrUI();
+  initDrag();
+}
+function updateRow(id) {
+  var p = allPlants().find(function(x){return x.id===id;}), el = document.getElementById('row-'+id);
+  if (p && el) { var t=document.createElement('div'); t.innerHTML=renderRow(p); el.replaceWith(t.firstChild); }
+  updateIrrUI();
+}
+
+// ── ACTIONS ──
+function doW(id) {
+  if (!STATE.records[id]) STATE.records[id] = {water:null, fert:null};
+  STATE.records[id].water = new Date().toISOString();
+  save(); updateRow(id);
+  var p = allPlants().find(function(x){return x.id===id;});
+  var vol = p && p.vol ? ' (' + fmtVol(p.vol) + ')' : '';
+  showToast('Annaffiata: ' + (p ? p.n : id) + vol);
+}
+function doF(id) {
+  if (!FERT_ACTIVE[getSeason()]) return;
+  if (!STATE.records[id]) STATE.records[id] = {water:null, fert:null};
+  var now = new Date().toISOString();
+  STATE.records[id].fert = now;
+  STATE.records[id].water = now;
+  save(); updateRow(id);
+  var p = allPlants().find(function(x){return x.id===id;});
+  var vol = p && p.vol ? ' (' + fmtVol(p.vol) + ')' : '';
+  showToast('Concimata + annaffiata: ' + (p ? p.n : id) + vol);
+}
+
+// ── TAB ──
+function sw(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active'); currentTab = name;
+}
+
+// ── MODAL UTILS ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function shake(id) {
+  var el = document.getElementById(id); if (!el) return;
+  el.style.borderColor = 'var(--red-dot)';
+  el.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:200,iterations:2});
+  setTimeout(function(){ el.style.borderColor=''; }, 1200);
+}
+function slugify(s) {
+  return s.toLowerCase().replace(/[àáâ]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u').replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+}
+
+// ── ADD ──
+function openAddModal() {
+  ['f-name','f-ftype','f-vol','f-notes','f-pruning','f-fertdose','f-potD','f-potB','f-potH','f-pwn','f-pwx','f-ewn','f-ewx','f-awn','f-awx','f-iwn','f-iwx','f-fn','f-fx','fD','fB','fH'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('fR').innerHTML = ''; var fBel = document.getElementById('fB'); if(fBel) fBel._userEdited = false;
+  document.getElementById('modal-add-sub').textContent = 'Verrà aggiunta a: ' + (currentTab==='balcone' ? '🌸 Balcone' : '🪴 Interno');
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(function(){ document.getElementById('f-name').focus(); }, 100);
+}
+function savePlant() {
+  var name = document.getElementById('f-name').value.trim();
+  var ftype = document.getElementById('f-ftype').value.trim();
+  var vol = parseInt(document.getElementById('f-vol').value) || null;
+  var notes = document.getElementById('f-notes').value.trim();
+  var pruning = document.getElementById('f-pruning').value.trim();
+  function gi(id){ return parseInt(document.getElementById(id).value)||0; }
+  var pwn=gi('f-pwn'),pwx=gi('f-pwx'),ewn=gi('f-ewn'),ewx=gi('f-ewx'),awn=gi('f-awn'),awx=gi('f-awx'),iwn=gi('f-iwn'),iwx=gi('f-iwx'),fn=gi('f-fn'),fx=gi('f-fx');
+  if (!name){ shake('f-name'); return; }
+  if (!ftype){ shake('f-ftype'); return; }
+  if (!pwn||!pwx||pwn>pwx||!ewn||!ewx||ewn>ewx||!awn||!awx||awn>awx||!iwn||!iwx||iwn>iwx){ ['f-pwn','f-pwx','f-ewn','f-ewx','f-awn','f-awx','f-iwn','f-iwx'].forEach(shake); return; }
+  if (!fn||!fx||fn>fx){ shake('f-fn'); shake('f-fx'); return; }
+  var baseId=slugify(name), newId=baseId, n2=1;
+  while(allPlants().find(function(x){return x.id===newId;})) newId=baseId+'_'+(++n2);
+  var fertdose = document.getElementById('f-fertdose').value.trim();
+  var potD = parseFloat(document.getElementById('f-potD').value)||null;
+  var potB = parseFloat(document.getElementById('f-potB').value)||null;
+  var potH = parseFloat(document.getElementById('f-potH').value)||null;
+  STATE.plants[currentTab].push({id:newId,n:name,vol:vol,notes:notes,pruning:pruning,fertDose:fertdose,potD:potD,potB:potB,potH:potH,sw:{p:{n:pwn,x:pwx},e:{n:ewn,x:ewx},a:{n:awn,x:awx},i:{n:iwn,x:iwx}},ft:ftype,fn:fn,fx:fx});
+  save(); renderAll(); closeModal('modal-add'); showToast('Aggiunta: '+name);
+}
+
+// ── EDIT ──
+var editingId = null;
+function editPlant(id) {
+  var p = allPlants().find(function(x){return x.id===id;}); if (!p) return;
+  editingId = id;
+  document.getElementById('modal-edit-sub').textContent = plantGroup(id)==='balcone' ? '🌸 Balcone' : '🪴 Interno';
+  document.getElementById('e-name').value = p.n;
+  document.getElementById('e-ftype').value = p.ft;
+  document.getElementById('e-vol').value = p.vol || '';
+  document.getElementById('e-notes').value = p.notes || '';
+  document.getElementById('e-pruning').value = p.pruning || '';
+  document.getElementById('e-fertdose').value = p.fertDose || '';
+  ['eD','eB','eH'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('eR').innerHTML = '';
+  var epotD = document.getElementById('e-potD'), epotB = document.getElementById('e-potB'), epotH = document.getElementById('e-potH');
+  if(epotD) epotD.value = p.potD||''; if(epotB) epotB.value = p.potB||''; if(epotH) epotH.value = p.potH||'';
+  // Also pre-fill calculator visual fields if pot dims exist
+  if(p.potD){ document.getElementById('eD').value=p.potD; document.getElementById('eB').value=p.potB||''; document.getElementById('eH').value=p.potH||''; }
+  var sw = p.sw || {p:{n:7,x:14},e:{n:3,x:5},a:{n:7,x:10},i:{n:21,x:28}};
+  document.getElementById('e-pwn').value=sw.p.n; document.getElementById('e-pwx').value=sw.p.x;
+  document.getElementById('e-ewn').value=sw.e.n; document.getElementById('e-ewx').value=sw.e.x;
+  document.getElementById('e-awn').value=sw.a.n; document.getElementById('e-awx').value=sw.a.x;
+  document.getElementById('e-iwn').value=sw.i.n; document.getElementById('e-iwx').value=sw.i.x;
+  document.getElementById('e-fn').value=p.fn; document.getElementById('e-fx').value=p.fx;
+  document.getElementById('modal-edit').classList.add('open');
+  setTimeout(function(){ document.getElementById('e-name').focus(); }, 100);
+}
+function applyEdit() {
+  if (!editingId) return;
+  var name = document.getElementById('e-name').value.trim();
+  var ftype = document.getElementById('e-ftype').value.trim();
+  var vol = parseInt(document.getElementById('e-vol').value) || null;
+  var notes = document.getElementById('e-notes').value.trim();
+  var pruning = document.getElementById('e-pruning').value.trim();
+  function gi(id){ return parseInt(document.getElementById(id).value)||0; }
+  var pwn=gi('e-pwn'),pwx=gi('e-pwx'),ewn=gi('e-ewn'),ewx=gi('e-ewx'),awn=gi('e-awn'),awx=gi('e-awx'),iwn=gi('e-iwn'),iwx=gi('e-iwx'),fn=gi('e-fn'),fx=gi('e-fx');
+  if (!name){ shake('e-name'); return; }
+  if (!ftype){ shake('e-ftype'); return; }
+  if (!pwn||!pwx||pwn>pwx||!ewn||!ewx||ewn>ewx||!awn||!awx||awn>awx||!iwn||!iwx||iwn>iwx){ ['e-pwn','e-pwx','e-ewn','e-ewx','e-awn','e-awx','e-iwn','e-iwx'].forEach(shake); return; }
+  if (!fn||!fx||fn>fx){ shake('e-fn'); shake('e-fx'); return; }
+  var grp = plantGroup(editingId);
+  var idx = STATE.plants[grp].findIndex(function(p){return p.id===editingId;}); if (idx===-1) return;
+  var fertdose = document.getElementById('e-fertdose').value.trim();
+  var potD = parseFloat(document.getElementById('e-potD').value)||null;
+  var potB = parseFloat(document.getElementById('e-potB').value)||null;
+  var potH = parseFloat(document.getElementById('e-potH').value)||null;
+  var old = STATE.plants[grp][idx];
+  STATE.plants[grp][idx] = {id:old.id,n:name,vol:vol,notes:notes,pruning:pruning,fertDose:fertdose,potD:potD,potB:potB,potH:potH,sw:{p:{n:pwn,x:pwx},e:{n:ewn,x:ewx},a:{n:awn,x:awx},i:{n:iwn,x:iwx}},ft:ftype,fn:fn,fx:fx};
+  save(); renderAll(); closeModal('modal-edit'); showToast('Salvata: '+name); editingId=null;
+}
+
+// ── DUPLICATE ──
+function dupPlant(id) {
+  var src = allPlants().find(function(x){return x.id===id;}); if (!src) return;
+  var grp = plantGroup(id), newId = src.id+'_2', n2 = 2;
+  while(allPlants().find(function(x){return x.id===newId;})) newId=src.id+'_'+(++n2);
+  var clone = JSON.parse(JSON.stringify(src));
+  clone.id = newId; clone.n = src.n + ' (copia)';
+  STATE.plants[grp].push(clone);
+  save(); renderAll(); showToast('Duplicata: '+clone.n);
+}
+
+// ── MOVE ──
+function movePlant(id) {
+  var from = plantGroup(id); if (!from) return;
+  var to = from==='balcone' ? 'interno' : 'balcone';
+  var plant = STATE.plants[from].find(function(p){return p.id===id;});
+  STATE.plants[from] = STATE.plants[from].filter(function(p){return p.id!==id;});
+  STATE.plants[to].push(plant);
+  save(); renderAll();
+  sw(to, document.getElementById('tab-btn-'+to));
+  showToast(plant.n + ' spostata in ' + (to==='balcone'?'Balcone':'Interno'));
+}
+
+// ── DELETE ──
+var pendingDeleteId = null;
+function askDelete(id) {
+  var p = allPlants().find(function(x){return x.id===id;});
+  pendingDeleteId = id;
+  document.getElementById('confirm-text').textContent = 'Vuoi rimuovere "' + (p?p.n:id) + '"? I dati andranno persi.';
+  document.getElementById('btn-confirm-del').onclick = confirmDelete;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+function confirmDelete() {
+  if (!pendingDeleteId) return;
+  ['balcone','interno'].forEach(function(g){ STATE.plants[g]=(STATE.plants[g]||[]).filter(function(p){return p.id!==pendingDeleteId;}); });
+  delete STATE.records[pendingDeleteId];
+  save(); renderAll(); closeModal('modal-confirm'); showToast('Pianta rimossa'); pendingDeleteId=null;
+}
+
+// ── POT CALCULATOR ──
+var WATER_COEFF = {succulente:0.10, fiorite:0.22, palme:0.22, conifere:0.15, acidofile:0.20, bio:0.18, universale:0.20};
+function getCoeff(ft) {
+  if (!ft) return 0.20;
+  var f = ft.toLowerCase();
+  if (f.indexOf('succ')>=0||f.indexOf('cact')>=0) return WATER_COEFF.succulente;
+  if (f.indexOf('fiorit')>=0) return WATER_COEFF.fiorite;
+  if (f.indexOf('palm')>=0)   return WATER_COEFF.palme;
+  if (f.indexOf('conifer')>=0)return WATER_COEFF.conifere;
+  if (f.indexOf('acidof')>=0) return WATER_COEFF.acidofile;
+  if (f.indexOf('bio')>=0)    return WATER_COEFF.bio;
+  return WATER_COEFF.universale;
+}
+// ml of concentrate per litre of water based on fertilizer type
+function autoBottom(pfx) {
+  var dEl = document.getElementById(pfx+'D');
+  var bEl = document.getElementById(pfx+'B');
+  var D = parseFloat(dEl.value);
+  if (D && bEl && !bEl._userEdited) {
+    bEl.value = Math.round(D * 0.7);
+  }
+}
+
+function getFertConc(ft) {
+  if (!ft) return 5;
+  var f = ft.toLowerCase();
+  if (f.indexOf('1/2')>=0 || f.indexOf('meta')>=0 || f.indexOf('half')>=0) return 2.5;
+  return 5;
+}
+
+// Given a plant object with potD/potB/potH, compute irrigation + fert quantities
+function computeFertDose(p) {
+  if (!p.potD || !p.potH) return null;
+  var D = p.potD, B = p.potB || D*0.7, H = p.potH;
+  var R = D/2, r = B/2;
+  var volCm3 = (Math.PI/3)*H*(R*R + R*r + r*r);
+  var soilVolL = (volCm3/1000)*0.85;
+  var coeff = getCoeff(p.ft);
+  var waterMl = Math.round(soilVolL*coeff*1000/50)*50;
+  var concMlPerL = getFertConc(p.ft);
+  var concMl = Math.round((waterMl/1000)*concMlPerL*10)/10; // round to .5
+  concMl = Math.round(concMl*2)/2;
+  return { waterMl: waterMl, concMl: concMl };
+}
+
+function fmtFertDose(p) {
+  var d = computeFertDose(p);
+  if (!d) return '';
+  return d.waterMl >= 1000
+    ? (d.waterMl%1000===0 ? d.waterMl/1000 : (d.waterMl/1000).toFixed(1))+'L'
+    : d.waterMl+'ml';
+}
+
+function calcVol(pfx) {
+  var D = parseFloat(document.getElementById(pfx+'D').value);
+  var B = parseFloat(document.getElementById(pfx+'B').value);
+  var H = parseFloat(document.getElementById(pfx+'H').value);
+  var resultEl = document.getElementById(pfx+'R');
+  var volInput = document.getElementById(pfx+'-vol');
+  if (!D||!H){ resultEl.innerHTML='<span style="color:var(--red-dot)">Inserisci almeno diametro bocca e altezza.</span>'; return; }
+  var baseD = B || D*0.7;
+  var R=D/2, r=baseD/2;
+  var volCm3 = (Math.PI/3)*H*(R*R+R*r+r*r);
+  var soilVolL = (volCm3/1000)*0.85;
+  var ftEl = document.getElementById(pfx==='f'?'f-ftype':'e-ftype');
+  var ft = ftEl ? ftEl.value : '';
+  var coeff = getCoeff(ft);
+  var pct = Math.round(coeff*100);
+  var irrigMl = Math.round(soilVolL*coeff*1000/50)*50;
+  var iDisp = irrigMl>=1000 ? (irrigMl%1000===0?(irrigMl/1000):(irrigMl/1000).toFixed(1))+'L' : irrigMl+'ml';
+  var concMl = Math.round((irrigMl/1000)*getFertConc(ft)*2)/2;
+  var note = B ? '' : ' <span class="calc-note">(fondo stimato a 70%)</span>';
+  resultEl.innerHTML = 'Substrato: <span>~'+soilVolL.toFixed(1)+'L</span>'
+    + ' · Irrigazione: <span>'+iDisp+'</span>'
+    + ' · Concime: <span>'+iDisp+' + '+concMl+'ml concentrato</span>'
+    + note;
+  if (volInput){ volInput.value=irrigMl; volInput.style.borderColor='var(--sage)'; setTimeout(function(){ volInput.style.borderColor=''; },1800); }
+  // store dims in hidden fields so they get saved with the plant
+  var dEl=document.getElementById(pfx+'-potD'), bEl=document.getElementById(pfx+'-potB'), hEl=document.getElementById(pfx+'-potH');
+  if(dEl) dEl.value=D; if(bEl) bEl.value=B||''; if(hEl) hEl.value=H;
+}
+
+// ── TOAST ──
+var tt;
+function showToast(msg, dur) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('show'); }, dur||2400);
+}
+
+
+
+// ── PLANT DATABASE ──
+var PLANT_DB = [
+  {k:['pothos','epipremnum','aureum'],          ftype:'Universale',    notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.',   fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,14], f:[14,21], pruning:'Rimuovi solo foglie secche o ingiallite. Nessuna potatura vera — accorcia i rami lunghissimi in primavera se vuoi compattarlo.'},
+  {k:['monstera','deliciosa','costola adamo'],   ftype:'Universale',    notes:'Lascia asciugare i primi 3-4 cm tra un\'annaffiatura e l\'altra. Nebulizza le foglie.',                  fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[14,21], iw:[21,21], f:[14,21], pruning:'Pota solo le foglie ingiallite o danneggiate tagliando il picciolo alla base. In primavera puoi accorciare i rami laterali per dare forma.'},
+  {k:['sansevieria','snake plant','lingua suocera'], ftype:'Universale', notes:'Errore comune: annaffiarla troppo. Quasi impossibile danneggiarla per siccità.',                        fertDose:'5ml per 1L · mezza dose consigliata',           pw:[21,28], ew:[21,28], aw:[28,42], iw:[42,56], f:[42,56], pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.'},
+  {k:['ficus','benjamin','benjamina'],           ftype:'Universale',    notes:'Non spostarlo — soffre i cambi di posizione. Annaffia quando i primi 2 cm sono asciutti.',              fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[14,21], pruning:'Pota a fine inverno per mantenere la forma. Forbici pulite. Evita potature drastiche — perde facilmente le foglie per stress.'},
+  {k:['ficus lyrata','fiddle leaf','lira'],      ftype:'Universale',    notes:'Sensibile ai ristagni e ai colpi d\'aria. Lascia asciugare i primi 3 cm tra le annaffiature.',         fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[14,21], pruning:'Pota il fusto principale per stimolare la ramificazione (incidi sopra una foglia). Rimuovi le foglie danneggiate. Primavera è il momento migliore.'},
+  {k:['kentia','howea','palma kentia'],          ftype:'Palme',         notes:'Non tolera siccità prolungata né ristagno. Nebulizza le foglie se l\'aria è secca.',                   fertDose:'5ml per 1L · nebulizza anche le foglie',        pw:[7,10], ew:[7,10], aw:[14,21], iw:[14,21], f:[21,21], pruning:'Non potare mai le foglie verdi, anche se pendenti. Rimuovi solo quelle completamente secche tagliando il picciolo alla base, mai a metà.'},
+  {k:['areca','dypsis','palma areca'],           ftype:'Palme',         notes:'Annaffia abbondantemente ma lascia drenare bene. Ama l\'umidità ambientale.',                          fertDose:'5ml per 1L · su substrato umido',               pw:[5,7],  ew:[5,7],  aw:[10,14], iw:[14,14], f:[21,21], pruning:'Come la kentia: rimuovi solo le fronde completamente secche. Non tagliare mai fronde verdi — rallenta la crescita.'},
+  {k:['chamaedorea','palma nana','elegans'],     ftype:'Palme',         notes:'Tollera poca luce. Annaffia quando i primi 2 cm sono asciutti. Nebulizza spesso.',                     fertDose:'5ml per 1L · diluire bene',                     pw:[7,10], ew:[7,10], aw:[14,21], iw:[21,21], f:[21,28], pruning:'Rimuovi solo le fronde secche o ingiallite tagliando il gambo alla base. Nessuna altra potatura necessaria.'},
+  {k:['zamioculcas','zamiifolia','zz plant'],    ftype:'Universale',    notes:'Tollera quasi l\'oscurità. Annaffia solo quando il terriccio è completamente asciutto.',               fertDose:'5ml per 1L · mezza dose',                       pw:[21,28], ew:[21,28], aw:[28,42], iw:[42,56], f:[42,56], pruning:'Rimuovi solo i rami ingialliti o secchi tagliando alla base del fusto. Nessuna potatura di forma necessaria.'},
+  {k:['spatifillo','spathiphyllum','spadice'],   ftype:'Fiorite',       notes:'Annaffia dal basso: vaso in piatto d\'acqua per 20 min poi svuota. Non lasciarlo mai asciutto.',       fertDose:'5ml per 1L · diluire bene, sensibile ai sali', pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,10], f:[14,14], pruning:'Rimuovi i fiori appassiti tagliando lo stelo alla base. Rimuovi le foglie ingiallite. Nessuna potatura strutturale.'},
+  {k:['pachira','aquatica','money tree'],        ftype:'Universale',    notes:'Il terreno deve asciugarsi a metà tra le annaffiature. Metti sassi nel sottovaso con acqua.',         fertDose:'5ml per 1L · su substrato leggermente umido',   pw:[7,10], ew:[7,10], aw:[14,21], iw:[14,21], f:[14,21], pruning:'Pota in primavera sopra un nodo per controllare la forma. Evita di toccare il tronco intrecciato. Accorcia i rami lunghi di un terzo.'},
+  {k:['yucca','yucca elephantipes'],             ftype:'Universale',    notes:'Lascia asciugare completamente tra le annaffiature. Teme il ristagno.',                               fertDose:'5ml per 1L · su substrato asciutto',            pw:[14,21], ew:[14,21], aw:[21,28], iw:[28,42], f:[28,42], pruning:'Pota il fusto principale per stimolare ramificazione laterale. Le foglie secche si rimuovono tirandole verso il basso. Primavera il momento ideale.'},
+  {k:['dracena','dracaena','marginata'],         ftype:'Universale',    notes:'Lascia asciugare i primi 3-4 cm. Sensibile al fluoro — usa acqua non calcarea.',                      fertDose:'5ml per 1L · max ogni 3 settimane',             pw:[10,14], ew:[10,14], aw:[14,21], iw:[21,28], f:[21,28], pruning:'Pota il fusto in primavera per stimolare nuovi getti laterali. Rimuovi le foglie secche tirandole verso il basso. Forbici pulite obbligatorie.'},
+  {k:['aloe','aloe vera','succulenta aloe'],     ftype:'Succulente',    notes:'Annaffia solo quando il terriccio è completamente asciutto. Ama il sole diretto.',                    fertDose:'2.5ml per 1L (mezza dose) · solo apr-set',      pw:[14,21], ew:[14,21], aw:[21,28], iw:[28,35], f:[28,42], pruning:'Rimuovi le foglie esterne secche o danneggiate tagliando alla base. Elimina i polloni laterali se vuoi mantenere la pianta compatta.'},
+  {k:['agave'],                                  ftype:'Succulente',    notes:'Tollera il secco meglio del freddo. Lontana da correnti d\'aria fredda.',                             fertDose:'2.5ml per 1L (mezza dose) · solo estate',      pw:[14,21], ew:[14,21], aw:[21,28], iw:[28,28], f:[28,42], pruning:'Rimuovi solo le foglie esterne completamente secche tagliando alla base. Usa guanti resistenti — le punte sono affilate.'},
+  {k:['portulacaria','afra','bonsai sudafricano'], ftype:'Succulente 1/2d', notes:'Annaffia solo quando il terriccio è completamente asciutto. Foglioline avvizzite = annaffia.', fertDose:'2.5ml per 1L (mezza dose) · max ogni 6 sett.', pw:[14,21], ew:[14,21], aw:[21,28], iw:[35,49], f:[28,42], pruning:'Pota liberamente in primavera per dare forma — risponde bene alle potature anche drastiche. Ottima come bonsai.'},
+  {k:['beaucarnea','nolina','tronchetto felicità'], ftype:'Succulente', notes:'Il bulbo alla base accumula acqua. Non annaffiare prima che sia completamente asciutto.',             fertDose:'2.5ml per 1L (mezza dose) · solo apr-set',      pw:[14,21], ew:[14,21], aw:[21,28], iw:[35,42], f:[28,42], pruning:'Rimuovi solo le foglie secche tirandole delicatamente verso il basso. Non potare il fusto — non ricresce.'},
+  {k:['crassula','ovata','jade plant','giada'],  ftype:'Succulente',    notes:'Lascia asciugare completamente tra le annaffiature. In inverno quasi stop.',                          fertDose:'2.5ml per 1L (mezza dose) · solo primavera-estate', pw:[14,21], ew:[14,21], aw:[21,28], iw:[35,42], f:[28,42], pruning:'Pota in primavera per mantenere la forma compatta. Taglia sopra un nodo fogliare. Tollera potature anche drastiche.'},
+  {k:['haworthia','fasciata','zebra'],           ftype:'Succulente',    notes:'Annaffia quando il terriccio è asciutto in profondità. Evita il sole diretto intenso.',              fertDose:'2.5ml per 1L (mezza dose) · solo estate',      pw:[14,21], ew:[14,21], aw:[21,28], iw:[28,35], f:[28,42], pruning:'Rimuovi solo le foglie esterne secche. Elimina i polloni laterali se vuoi mantenere la pianta singola, oppure lasciali per creare un gruppo.'},
+  {k:['echeveria'],                              ftype:'Succulente',    notes:'Lascia asciugare completamente. Non bagnare le foglie — marcirebbe il centro.',                      fertDose:'2.5ml per 1L (mezza dose) · solo apr-set',      pw:[14,21], ew:[14,21], aw:[21,28], iw:[35,42], f:[28,42], pruning:'Rimuovi le foglie esterne secche o appassite. Elimina il fiore dopo la fioritura tagliando lo stelo alla base.'},
+  {k:['peperomia','serpens','watermelon','argyreia'], ftype:'Universale 1/2d', notes:'Aspetta sempre che il terriccio sia ben asciutto. Usa concime a metà dose — sensibile ai sali.', fertDose:'2.5ml per 1L (mezza dose) · molto sensibile ai sali', pw:[10,14], ew:[10,14], aw:[14,21], iw:[21,21], f:[21,28], pruning:'Rimuovi foglie secche o ingiallite. Accorcia i rami troppo lunghi in primavera per mantenere la pianta compatta.'},
+  {k:['calathea','makoyana','orbifolia'],        ftype:'Universale',    notes:'Mantieni il terriccio leggermente umido. Usa acqua a temperatura ambiente. Ama l\'umidità.',         fertDose:'5ml per 1L · diluire bene, sensibile ai sali', pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,14], f:[14,21], pruning:'Rimuovi le foglie secche o arrotolate tagliando il picciolo alla base. Nessuna potatura strutturale necessaria.'},
+  {k:['maranta','leuconeura','preghiera'],       ftype:'Universale',    notes:'Mantieni umido ma non fradicio. Nebulizza spesso. Sensibile al calcare — usa acqua filtrata.',        fertDose:'5ml per 1L · diluire bene',                     pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,14], f:[14,21], pruning:'Rimuovi le foglie secche alla base. Pota i rami troppo lunghi in primavera per stimolare una crescita più compatta.'},
+  {k:['philodendron','scandens','gloriosum'],    ftype:'Universale',    notes:'Lascia asciugare i primi 3 cm. Tollera poca luce ma cresce meglio con luce indiretta vivace.',        fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[14,21], pruning:'Accorcia i rami troppo lunghi in primavera tagliando sopra un nodo. Rimuovi le foglie vecchie alla base.'},
+  {k:['anthurium','andreanum'],                  ftype:'Fiorite',       notes:'Mantieni leggermente umido. Non lasciare mai ristagni. Nebulizza le foglie.',                         fertDose:'5ml per 1L · ogni 3 settimane',                 pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,14], f:[14,21], pruning:'Rimuovi i fiori appassiti tagliando lo stelo alla base. Elimina le foglie ingiallite. Nessuna altra potatura necessaria.'},
+  {k:['orchidea','phalaenopsis','falena'],       ftype:'Orchidee',      notes:'Immergi il vaso in acqua per 10 min, poi scola bene. Non lasciare mai acqua nel piatto.',            fertDose:'2ml per 1L · ogni 2 annaffiature',              pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[14,21], pruning:'Dopo la fioritura taglia lo stelo sopra il secondo nodo dal basso — potrebbe rifiorire. Se lo stelo ingiallisce completamente, taglia alla base.'},
+  {k:['ciclamino','cyclamen'],                   ftype:'Fiorite',       notes:'Annaffia dal basso: piatto d\'acqua per 20-30 min poi svuota. Non bagnare mai il centro.',           fertDose:'5ml per 1L · solo durante la fioritura (ott-mar)', pw:[5,7], ew:[21,28], aw:[5,7], iw:[5,7], f:[14,14], pruning:'Rimuovi fiori e foglie appassite tirando il picciolo con un movimento rotatorio (non tagliare). In estate taglia tutto a raso e lascia riposare.'},
+  {k:['scindapsus','pictus','argento'],          ftype:'Universale',    notes:'Come il pothos — lascia asciugare i primi 2-3 cm. Tollera poca luce.',                               fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[14,21], pruning:'Accorcia i rami troppo lunghi in primavera tagliando sopra un nodo. Le talee radica facilmente in acqua.'},
+  {k:['hoya','carnosa','pianta di cera'],        ftype:'Fiorite',       notes:'Lascia asciugare quasi completamente tra le annaffiature. Ama il sole diretto per fiorire.',         fertDose:'5ml per 1L · su substrato quasi asciutto',      pw:[10,14], ew:[7,10], aw:[14,21], iw:[21,28], f:[14,21], pruning:'Non rimuovere mai i peduncoli fiorali vecchi — rifiorisce ogni anno sugli stessi. Accorcia solo i rami vegetativi troppo lunghi in primavera.'},
+  {k:['tradescantia','zebrina','sventola'],      ftype:'Universale',    notes:'Mantieni leggermente umido. Cresce velocemente — pota spesso per mantenerla compatta.',              fertDose:'5ml per 1L · su substrato umido',               pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,14], f:[14,21], pruning:'Pota regolarmente durante tutta la stagione — almeno ogni 4-6 settimane — tagliando sopra un nodo per stimolare la ramificazione.'},
+  {k:['chlorophytum','pianta ragno','comosum'],  ftype:'Universale',    notes:'Tollera la siccità. Lascia asciugare tra le annaffiature. Rimuovi le "figlie" se vuoi.',             fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,21], f:[21,28], pruning:'Rimuovi le foglie secche alla base. Taglia i stoloni con le "figlie" se la pianta è troppo densa, oppure piantale per moltiplicarla.'},
+  {k:['asparagus','falce','falce ascospermum'],  ftype:'Universale',    notes:'Mantieni leggermente umido. Non lasciare asciugare completamente — ingiallisce.',                    fertDose:'5ml per 1L · su substrato umido',               pw:[5,7],  ew:[5,7],  aw:[7,10],  iw:[10,14], f:[14,21], pruning:'Rimuovi i rami ingialliti alla base in primavera. Pota per mantenere la forma compatta tagliando i rami più vecchi.'},
+  {k:['syngonium','podophyllum','zampa'],        ftype:'Universale',    notes:'Lascia asciugare i primi 2-3 cm. Nebulizza spesso. Ama l\'umidità.',                                 fertDose:'5ml per 1L · su substrato umido',               pw:[7,10], ew:[7,10], aw:[10,14], iw:[14,14], f:[14,21], pruning:'Accorcia i rami rampicanti in primavera per mantenere la pianta compatta. Taglia sopra un nodo. Le talee radica facilmente in acqua.'},
+  // BALCONE
+  {k:['geranio','gerani','pelargonium'],         ftype:'Fiorite',       notes:'Abbondante ma senza ristagni nel sottovaso — svuota dopo 30 min. Evita di bagnare foglie.',          fertDose:'5ml per 1L · ogni annaffiatura con concime',   pw:[5,7],  ew:[2,3],  aw:[5,7],   iw:[7,10],  f:[7,10],  pruning:'Pota drasticamente a febbraio-marzo lasciando 2-3 nodi per ramo. Durante la stagione rimuovi i fiori appassiti regolarmente per favorire la fioritura continua.'},
+  {k:['rosa','rose','rampicante'],               ftype:'Fiorite',       notes:'Non bagnare le foglie — favorisce le malattie fungine. Annaffia alla base.',                         fertDose:'5ml per 1L · ogni 2 settimane in fioritura',   pw:[5,7],  ew:[3,4],  aw:[7,10],  iw:[21,28], f:[14,14], pruning:'Pota a fine inverno (febbraio) rimuovendo i rami morti e accorciando gli altri di un terzo. Rimuovi i fiori appassiti durante la stagione. Usa guanti e forbici disinfettate.'},
+  {k:['lavanda','lavandula'],                    ftype:'Fiorite',       notes:'Lascia asciugare quasi completamente. Teme il ristagno più della siccità.',                          fertDose:'5ml per 1L · solo in primavera',               pw:[7,10], ew:[5,7],  aw:[10,14], iw:[21,28], f:[28,28], pruning:'Pota dopo la fioritura estiva accorciando gli steli di circa la metà. Non tagliare mai nel legno vecchio — non ricresce. Pota leggermente anche a fine inverno.'},
+  {k:['oleandro','nerium'],                      ftype:'Fiorite',       notes:'Tutte le parti sono tossiche. Non bruciare mai i rami potati. Sotto -5C copri il vaso.',            fertDose:'5-10ml per 1L · pianta molto esigente',        pw:[3,4],  ew:[1,2],  aw:[5,7],   iw:[21,28], f:[14,14], pruning:'Pota dopo la fioritura estiva accorciando i rami di un terzo. Usa sempre guanti — tutto è tossico. Non bruciare mai i rami di scarto.'},
+  {k:['gelsomino','jasminum','falso gelsomino'], ftype:'Fiorite',       notes:'Terreno leggermente umido, ben drenato. Evita ristagni. Sotto -5C proteggi il vaso.',               fertDose:'5ml per 1L · su substrato umido',              pw:[3,4],  ew:[1,2],  aw:[5,7],   iw:[21,28], f:[14,14], pruning:'Pota dopo la fioritura primaverile. Rimuovi i rami che escono dalla forma e accorcia quelli lunghi di un terzo. Dirada i rami più vecchi per favorire quelli nuovi.'},
+  {k:['eucalipto','eucalyptus'],                 ftype:'Universale',    notes:'Lascia asciugare i primi cm tra le annaffiature. Teme il ristagno più della siccità.',              fertDose:'5ml per 1L · su substrato umido',              pw:[4,5],  ew:[3,3],  aw:[7,7],   iw:[21,28], f:[21,28], pruning:'Pota in primavera per controllare le dimensioni — ricaccia vigoroso anche dopo potature drastiche. Taglia sopra un nodo fogliare.'},
+  {k:['mirto','myrtle','myrtus'],                ftype:'Bio',           notes:'Bio obbligatorio se usi bacche e foglie in cucina. Teme il freddo in vaso sotto -3/-5C.',           fertDose:'granulare bio: 20-30g per vaso da 20cm',       pw:[4,5],  ew:[2,3],  aw:[7,7],   iw:[28,35], f:[21,28], pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature anche drastiche. Rimuovi i rami che crescono verso l\'interno.'},
+  {k:['alloro','laurus','lauro'],                ftype:'Bio',           notes:'Rinvasa ogni 2-3 anni. Teme ristagni e venti gelidi.',                                               fertDose:'granulare bio: 20-30g per vaso da 20cm',       pw:[4,5],  ew:[2,3],  aw:[7,7],   iw:[21,28], f:[21,28], pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature drastiche. Rimuovi i polloni alla base per mantenere un fusto pulito.'},
+  {k:['fotinia','photinia'],                     ftype:'Universale',    notes:'Non bagnare il fogliame. Sensibile all\'Entomosporium (macchie marroni). Garantisci ventilazione.',  fertDose:'5ml per 1L · su substrato umido',              pw:[3,4],  ew:[2,2],  aw:[5,7],   iw:[21,28], f:[21,21], pruning:'Pota in primavera dopo la fioritura accorciando i rami nuovi di circa la metà. Non bagnare le foglie durante la potatura — favorisce le malattie fungine.'},
+  {k:['loropetalum','ciliegio giapponese'],      ftype:'Acidofile',     notes:'Non lasciarlo mai completamente asciutto in agosto. Usa terriccio per acidofile.',                  fertDose:'5ml per 1L acidofile · mai universale',        pw:[3,3],  ew:[1,2],  aw:[5,5],   iw:[21,28], f:[14,21], pruning:'Pota dopo la fioritura primaverile accorciando i rami di un terzo. Rimuovi i rami che crescono verso l\'interno per migliorare l\'arieggiamento.'},
+  {k:['rododendro','azalea','rhododendron'],     ftype:'Acidofile',     notes:'Mantieni umido ma non fradicio. Usa acqua non calcarea. Terreno per acidofile obbligatorio.',       fertDose:'5ml per 1L acidofile · mai universale',        pw:[4,5],  ew:[2,3],  aw:[5,7],   iw:[10,14], f:[14,21], pruning:'Rimuovi i fiori appassiti subito dopo la fioritura (deadheading). Pota leggermente la forma subito dopo — evita potature autunnali che eliminerebbero le gemme fiorali.'},
+  {k:['ortensia','hydrangea'],                   ftype:'Acidofile',     notes:'Ama molta acqua in estate. Non lasciare mai asciugare completamente in luglio-agosto.',              fertDose:'5ml per 1L acidofile · ogni 2 settimane',      pw:[3,5],  ew:[2,3],  aw:[5,7],   iw:[10,14], f:[14,14], pruning:'Pota a fine inverno (marzo) tagliando i rami vecchi alla base e accorciando quelli dell\'anno scorso sopra una coppia di gemme. Non potare in autunno — perderesti i fiori.'},
+  {k:['ginepro','juniperus'],                    ftype:'Conifere',      notes:'Soffre più per eccesso di cure che per mancanza. Troppo azoto rende la crescita disordinata.',      fertDose:'5ml per 1L · oppure granulare a marzo',        pw:[5,6],  ew:[4,4],  aw:[7,10],  iw:[35,42], f:[28,42], pruning:'Pota leggermente in primavera solo i rametti verdi dell\'anno. Mai tagliare nel legno vecchio — non ricresce. Usa cesoie da bonsai per precisione.'},
+  {k:['cipresso','cupressus','leylandi'],        ftype:'Conifere',      notes:'Lascia asciugare i primi cm. Teme il ristagno. Poca manutenzione.',                                 fertDose:'granulare lenta cessione · solo a marzo',      pw:[7,10], ew:[5,7],  aw:[10,14], iw:[28,35], f:[28,42], pruning:'Pota in primavera e fine estate solo il fogliame verde. Mai nel legno vecchio — non ricresce. Mantieni la forma conica con tagli leggeri e regolari.'},
+  {k:['surfinia','petunia'],                     ftype:'Fiorite',       notes:'Abbondante e frequente in estate. Asporta i fiori appassiti per prolungare la fioritura.',          fertDose:'5ml per 1L · ogni annaffiatura in estate',     pw:[3,4],  ew:[1,2],  aw:[4,5],   iw:[14,21], f:[7,10],  pruning:'Rimuovi i fiori appassiti continuamente (deadheading). A metà estate pota i rami di un terzo per stimolare nuovi getti e prolungare la fioritura fino all\'autunno.'},
+  {k:['begonia'],                                ftype:'Fiorite',       notes:'Non bagnare le foglie. Lascia asciugare leggermente tra le annaffiature.',                          fertDose:'5ml per 1L · ogni 2 settimane',                pw:[4,5],  ew:[3,4],  aw:[5,7],   iw:[14,21], f:[14,14], pruning:'Rimuovi i fiori appassiti regolarmente. Pota i rami leggermente in primavera per stimolare una crescita più compatta e ricca di fiori.'},
+  {k:['verbena'],                                ftype:'Fiorite',       notes:'Abbondante in estate. Asporta i fiori appassiti. Teme i ristagni.',                                  fertDose:'5ml per 1L · ogni 2 settimane in estate',      pw:[3,4],  ew:[2,3],  aw:[4,5],   iw:[14,21], f:[14,14], pruning:'Rimuovi i fiori appassiti regolarmente. A metà estate accorcia i rami di un terzo per rinvigorire la pianta e prolungare la fioritura.'},
+  {k:['bouganville','bougainvillea'],            ftype:'Fiorite',       notes:'Ama il caldo e il secco — annaffia poco per stimolare la fioritura. Teme il gelo.',                 fertDose:'5ml per 1L · su substrato quasi asciutto',     pw:[7,10], ew:[5,7],  aw:[10,14], iw:[21,28], f:[14,21], pruning:'Pota drasticamente dopo la fioritura (primavera/estate) accorciando i rami di due terzi. Usa guanti — le spine sono affilate. La potatura drastica stimola la fioritura abbondante.'},
+  {k:['passiflora','fiore della passione'],      ftype:'Fiorite',       notes:'Annaffia regolarmente in estate. Necessita di un supporto per arrampicarsi.',                       fertDose:'5ml per 1L · ogni 2 settimane in estate',      pw:[4,5],  ew:[2,3],  aw:[5,7],   iw:[14,21], f:[14,21], pruning:'Pota a fine inverno (febbraio-marzo) rimuovendo i rami secchi e accorciando quelli dell\'anno a 2-3 gemme. Dirada se troppo densa per migliorare l\'arieggiamento.'},
+  {k:['edera','hedera'],                         ftype:'Universale',    notes:'Mantieni leggermente umido. Tollera l\'ombra. Nebulizza in ambienti secchi.',                        fertDose:'5ml per 1L · ogni 3 settimane',                pw:[7,10], ew:[5,7],  aw:[10,14], iw:[14,21], f:[21,28], pruning:'Pota in primavera per controllare la crescita. Taglia i rami troppo lunghi e rimuovi quelli secchi. Tollera anche potature drastiche e ricresce vigorosa.'},
+  {k:['lantana'],                                ftype:'Fiorite',       notes:'Annaffia abbondantemente in estate. Lascia asciugare leggermente in autunno.',                       fertDose:'5ml per 1L · ogni 2 settimane in estate',      pw:[4,5],  ew:[2,3],  aw:[7,10],  iw:[21,28], f:[14,14], pruning:'Pota drasticamente a fine inverno (febbraio) lasciando 10-15 cm di ramo. Durante la stagione rimuovi i fiori appassiti per prolungare la fioritura.'},
+  {k:['cactus','cereus','trichocereus','opuntia','mammillaria'], ftype:'Succulente', notes:'Annaffia raramente — solo quando il terriccio è completamente asciutto. In inverno stop.', fertDose:'2.5ml per 1L · solo apr-set ogni 6 settimane', pw:[14,21], ew:[14,21], aw:[28,35], iw:[56,56], f:[42,56], pruning:'Rimuovi i cladodi (pale) danneggiati o malati usando guanti spessi e pinze. Per i cactus colonnari non è necessaria alcuna potatura.'},
+];
+
+function findPlantInDb(name) {
+  var n = name.toLowerCase().trim();
+  var best = null, bestScore = 0;
+  PLANT_DB.forEach(function(p) {
+    var score = 0;
+    p.k.forEach(function(k) {
+      if (n === k) score = Math.max(score, 100);
+      else if (n.indexOf(k) !== -1 || k.indexOf(n) !== -1) score = Math.max(score, 80);
+      else {
+        // partial word match
+        var words = n.split(/\s+/);
+        words.forEach(function(w) {
+          if (w.length > 2 && k.indexOf(w) !== -1) score = Math.max(score, 60);
+        });
+      }
+    });
+    if (score > bestScore) { bestScore = score; best = p; }
+  });
+  return bestScore >= 60 ? best : null;
+}
+
+// ── AI AUTOFILL ──
+async function aiAutofill() {
+  var name = document.getElementById('f-name').value.trim();
+  var statusEl = document.getElementById('ai-fill-status');
+  var btn = document.getElementById('btn-ai-fill');
+  if (!name) { statusEl.style.color = 'var(--red-dot)'; statusEl.textContent = 'Inserisci prima il nome della pianta.'; return; }
+
+  statusEl.style.color = 'var(--sage)';
+  statusEl.textContent = '🔍 Ricerca in corso…';
+  btn.disabled = true; btn.style.opacity = '.5';
+
+  var plant = findPlantInDb(name);
+
+  if (plant) {
+    document.getElementById('f-ftype').value    = plant.ftype;
+    document.getElementById('f-notes').value    = plant.notes;
+    document.getElementById('f-pruning').value  = plant.pruning || '';
+    document.getElementById('f-fertdose').value = plant.fertDose;
+    document.getElementById('f-pwn').value      = plant.pw[0];
+    document.getElementById('f-pwx').value      = plant.pw[1];
+    document.getElementById('f-ewn').value      = plant.ew[0];
+    document.getElementById('f-ewx').value      = plant.ew[1];
+    document.getElementById('f-awn').value      = plant.aw[0];
+    document.getElementById('f-awx').value      = plant.aw[1];
+    document.getElementById('f-iwn').value      = plant.iw[0];
+    document.getElementById('f-iwx').value      = plant.iw[1];
+    document.getElementById('f-fn').value       = plant.f[0];
+    document.getElementById('f-fx').value       = plant.f[1];
+    statusEl.style.color = 'var(--moss)';
+    statusEl.textContent = '✅ Dati trovati — controlla e modifica se necessario';
+  } else {
+    statusEl.style.color = 'var(--terra)';
+    statusEl.textContent = '⚠️ Pianta non trovata nel database — inserisci i dati manualmente';
+  }
+
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+
+function exportData() {
+  try {
+    var payload = JSON.parse(JSON.stringify(STATE));
+    delete payload._lastSaved;
+    var json = JSON.stringify(payload, null, 2);
+    var date = new Date().toISOString().slice(0,10);
+    var filename = 'plant-tracker-backup-' + date + '.json';
+    // Use data: URI — works from file:// and hosted URLs
+    var uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+    var a = document.createElement('a');
+    a.href = uri;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('✅ Backup scaricato: ' + filename);
+  } catch(e) {
+    // Fallback: mostra i dati in una nuova finestra per copia manuale
+    var w = window.open('', '_blank');
+    if (w) {
+      w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all">' + JSON.stringify(STATE) + '</pre>');
+      w.document.title = 'Plant Tracker Backup — copia tutto il testo';
+    }
+    showToast('Usa la finestra aperta per copiare i dati');
+  }
+}
+
+function importData(input) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.plants) throw new Error('File non valido');
+      STATE.plants  = data.plants;
+      STATE.records = data.records || {};
+      save(); renderAll();
+      showToast('✅ Dati importati correttamente');
+    } catch(err) {
+      showToast('❌ Errore: file non valido');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── CLOUD SYNC (JSONBin.io) ──
+var CLOUD_KEY_SK  = 'pt_cloud_apikey';
+var CLOUD_BIN_SK  = 'pt_cloud_binid';
+var cloudApiKey   = localStorage.getItem(CLOUD_KEY_SK) || '';
+var cloudBinId    = localStorage.getItem(CLOUD_BIN_SK) || '';
+var cloudSyncing  = false;
+
+function openCloudModal() {
+  var connected = !!(cloudApiKey && cloudBinId);
+  document.getElementById('cloud-disconnected-view').style.display = connected ? 'none' : 'block';
+  document.getElementById('cloud-connected-view').style.display    = connected ? 'block' : 'none';
+  if (connected) {
+    document.getElementById('cloud-binid-display').textContent = cloudBinId;
+  } else {
+    document.getElementById('cloud-apikey').value = cloudApiKey || '';
+    document.getElementById('cloud-binid').value  = '';
+    document.getElementById('cloud-error').textContent = '';
+  }
+  document.getElementById('modal-cloud').classList.add('open');
+  if (!connected) setTimeout(function(){ document.getElementById('cloud-apikey').focus(); }, 100);
+}
+
+function copyBinId() {
+  navigator.clipboard.writeText(cloudBinId).then(function() {
+    var btn = document.getElementById('btn-copy-binid');
+    btn.textContent = '✓ Copiato'; btn.style.background = 'var(--forest)';
+    setTimeout(function(){ btn.textContent = 'Copia'; btn.style.background = ''; }, 2000);
+  }).catch(function() {
+    // Fallback for devices without clipboard API
+    var el = document.getElementById('cloud-binid-display');
+    var range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    var btn = document.getElementById('btn-copy-binid');
+    btn.textContent = '✓ Copiato';
+    setTimeout(function(){ btn.textContent = 'Copia'; }, 2000);
+  });
+}
+
+function disconnectCloud() {
+  cloudApiKey = ''; cloudBinId = '';
+  localStorage.removeItem(CLOUD_KEY_SK);
+  localStorage.removeItem(CLOUD_BIN_SK);
+  updateCloudBtn();
+  closeModal('modal-cloud');
+  showToast('Cloud disconnesso');
+}
+
+function updateCloudBtn() {
+  var btn   = document.getElementById('btn-cloud');
+  var label = document.getElementById('btn-cloud-label');
+  if (!btn) return;
+  if (cloudApiKey && cloudBinId) {
+    btn.classList.add('connected');
+    label.textContent = 'Cloud attivo';
+  } else {
+    btn.classList.remove('connected');
+    label.textContent = 'Sync cloud';
+  }
+}
+
+async function connectCloud() {
+  var key   = document.getElementById('cloud-apikey').value.trim();
+  var binId = document.getElementById('cloud-binid').value.trim();
+  var errEl = document.getElementById('cloud-error');
+  errEl.textContent = '';
+  if (!key) { errEl.textContent = 'Inserisci la Master Key.'; return; }
+
+  var btn = document.getElementById('btn-cloud-connect');
+  btn.textContent = 'Connessione…'; btn.disabled = true;
+
+  try {
+    if (binId) {
+      // Bin ID provided manually — connect directly and pull data
+      cloudApiKey = key;
+      cloudBinId  = binId;
+      localStorage.setItem(CLOUD_KEY_SK, cloudApiKey);
+      localStorage.setItem(CLOUD_BIN_SK, cloudBinId);
+      updateCloudBtn();
+      closeModal('modal-cloud');
+      await cloudPull();
+      showToast('☁️ Cloud connesso — dati sincronizzati');
+    } else {
+      // No bin ID — create a new bin with current data
+      var payload = JSON.parse(JSON.stringify(STATE));
+      delete payload._lastSaved;
+      var res = await fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': key, 'X-Bin-Name': 'plant-tracker', 'X-Bin-Private': 'true' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        var err = await res.json().catch(function(){ return {}; });
+        throw new Error(err.message || 'Errore ' + res.status);
+      }
+      var data = await res.json();
+      var newId = data.metadata ? data.metadata.id : null;
+      if (!newId) throw new Error('ID bin non ricevuto da JSONBin');
+      cloudApiKey = key;
+      cloudBinId  = newId;
+      localStorage.setItem(CLOUD_KEY_SK, cloudApiKey);
+      localStorage.setItem(CLOUD_BIN_SK, cloudBinId);
+      updateCloudBtn();
+      closeModal('modal-cloud');
+      showToast('☁️ Cloud connesso — Bin ID: ' + newId);
+    }
+  } catch(e) {
+    errEl.textContent = 'Errore: ' + e.message;
+  } finally {
+    btn.textContent = 'Connetti'; btn.disabled = false;
+  }
+}
+
+async function cloudPush() {
+  if (!cloudApiKey || !cloudBinId || cloudSyncing) return;
+  cloudSyncing = true;
+  var btn = document.getElementById('btn-cloud');
+  if (btn) btn.classList.add('syncing');
+  try {
+    var payload = JSON.parse(JSON.stringify(STATE));
+    delete payload._lastSaved;
+    await fetch('https://api.jsonbin.io/v3/b/' + cloudBinId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': cloudApiKey },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { /* silent — local save already done */ }
+  cloudSyncing = false;
+  if (btn) btn.classList.remove('syncing');
+}
+
+async function cloudPull() {
+  if (!cloudApiKey || !cloudBinId) return;
+  try {
+    var res = await fetch('https://api.jsonbin.io/v3/b/' + cloudBinId + '/latest', {
+      headers: { 'X-Master-Key': cloudApiKey }
+    });
+    if (!res.ok) return;
+    var data = await res.json();
+    var remote = data.record;
+    if (!remote || !remote.plants) return;
+
+    // Compare timestamps — only overwrite if remote is newer than local
+    var localTs  = lastSaved ? new Date(lastSaved).getTime() : 0;
+    var remoteTs = remote._lastSaved ? new Date(remote._lastSaved).getTime() : 0;
+
+    if (remoteTs > localTs) {
+      STATE.plants  = remote.plants;
+      STATE.records = remote.records || STATE.records;
+      STATE._lastSaved = remote._lastSaved;
+      lastSaved = remote._lastSaved;
+      try { localStorage.setItem(SK, JSON.stringify(STATE)); } catch(e) {}
+      updateSync();
+      renderAll();
+      showToast('☁️ Dati aggiornati dal cloud');
+    } else if (localTs > remoteTs) {
+      // Local is newer — push to cloud to keep it aligned
+      cloudPush();
+    }
+    // If equal, nothing to do
+  } catch(e) { /* silent */ }
+}
+
+// ── DRAG & DROP REORDER ──
+var dragSrcId = null;
+
+function initDrag() {
+  document.querySelectorAll('.plant-row').forEach(function(row) {
+    row.addEventListener('dragstart', function(e) {
+      dragSrcId = row.dataset.id;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', function() {
+      row.classList.remove('dragging');
+      document.querySelectorAll('.plant-row').forEach(function(r){ r.classList.remove('drag-over'); });
+    });
+    row.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('.plant-row').forEach(function(r){ r.classList.remove('drag-over'); });
+      if (row.dataset.id !== dragSrcId) row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', function() {
+      row.classList.remove('drag-over');
+    });
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (!dragSrcId || dragSrcId === row.dataset.id) return;
+      var targetId = row.dataset.id;
+      var srcGrp = plantGroup(dragSrcId);
+      var tgtGrp = plantGroup(targetId);
+      if (srcGrp !== tgtGrp) return; // only reorder within same group
+      var arr = STATE.plants[srcGrp];
+      var srcIdx = arr.findIndex(function(p){ return p.id === dragSrcId; });
+      var tgtIdx = arr.findIndex(function(p){ return p.id === targetId; });
+      if (srcIdx === -1 || tgtIdx === -1) return;
+      var item = arr.splice(srcIdx, 1)[0];
+      arr.splice(tgtIdx, 0, item);
+      save();
+      renderAll();
+    });
+  });
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  o.addEventListener('click', function(e){ if(e.target===o) o.classList.remove('open'); });
+});
+setInterval(updateSync, 60000);
+setInterval(function(){ if(irrigationOn) autoWaterCheck(); }, 3600000); // check every hour
+load();
+setSeason(null, false);
+renderAll();
+initDrag();
+updateCloudBtn();
+if (cloudApiKey && cloudBinId) cloudPull();
+// Auto-water check on startup if irrigation was active
+if (irrigationOn) setTimeout(autoWaterCheck, 1200);
+
+</script>
+</body>
+</html>
