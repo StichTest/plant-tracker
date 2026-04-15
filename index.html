@@ -802,14 +802,14 @@ function toggleIrrigation() {
 function autoWaterCheck() {
   if (!irrigationOn) return;
   var s = getSeason();
-  var freq = getIrrFreq(); // use most demanding plant's frequency
   var now = new Date().toISOString();
   var watered = [];
   (STATE.plants.balcone||[]).forEach(function(p) {
     if (!STATE.records[p.id]) STATE.records[p.id] = {water:null, fert:null};
     var wd = daysSince(STATE.records[p.id].water);
-    // Water if never watered, or overdue based on most demanding freq
-    if (wd === null || wd >= freq.n) {
+    // Usa la frequenza minima della singola pianta per la stagione corrente
+    var plantFreq = p.sw && p.sw[s] ? p.sw[s].n : (p.wn || 7);
+    if (wd === null || wd >= plantFreq) {
       STATE.records[p.id].water = now;
       watered.push(p.n);
     }
