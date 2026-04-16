@@ -799,21 +799,26 @@ function toggleIrrigation() {
 }
 
 // Auto-water: when irrigation is on, water all balcone plants that are overdue
+var AUTO_WATER_SK = 'pt_last_autowater';
+
 function autoWaterCheck() {
   if (!irrigationOn) return;
+  // Run max once per day
+  var today = new Date().toISOString().slice(0,10);
+  if (localStorage.getItem(AUTO_WATER_SK) === today) return;
   var s = getSeason();
   var now = new Date().toISOString();
   var watered = [];
   (STATE.plants.balcone||[]).forEach(function(p) {
     if (!STATE.records[p.id]) STATE.records[p.id] = {water:null, fert:null};
     var wd = daysSince(STATE.records[p.id].water);
-    // Usa la frequenza minima della singola pianta per la stagione corrente
     var plantFreq = p.sw && p.sw[s] ? p.sw[s].n : (p.wn || 7);
     if (wd === null || wd >= plantFreq) {
       STATE.records[p.id].water = now;
       watered.push(p.n);
     }
   });
+  localStorage.setItem(AUTO_WATER_SK, today);
   if (watered.length > 0) {
     save();
     showToast('💧 Auto-irrigazione: ' + watered.length + ' piante annaffiate', 3500);
@@ -1522,24 +1527,44 @@ async function cloudPull() {
     var remote = data.record;
     if (!remote || !remote.plants) return;
 
-    // Compare timestamps — only overwrite if remote is newer than local
     var localTs  = lastSaved ? new Date(lastSaved).getTime() : 0;
     var remoteTs = remote._lastSaved ? new Date(remote._lastSaved).getTime() : 0;
 
     if (remoteTs > localTs) {
+      // Remote is newer: take everything from remote
       STATE.plants  = remote.plants;
       STATE.records = remote.records || STATE.records;
       STATE._lastSaved = remote._lastSaved;
       lastSaved = remote._lastSaved;
       try { localStorage.setItem(SK, JSON.stringify(STATE)); } catch(e) {}
-      updateSync();
-      renderAll();
+      updateSync(); renderAll();
       showToast('☁️ Dati aggiornati dal cloud');
     } else if (localTs > remoteTs) {
-      // Local is newer — push to cloud to keep it aligned
+      // Local is newer: push to cloud
       cloudPush();
+    } else {
+      // Same timestamp but may have different plant order from another device:
+      // Always sync plant structure from remote, merge records taking most recent date
+      var changed = false;
+      if (remote.plants) {
+        STATE.plants = remote.plants;
+        changed = true;
+      }
+      if (remote.records) {
+        Object.keys(remote.records).forEach(function(id) {
+          if (!STATE.records[id]) { STATE.records[id] = remote.records[id]; changed = true; return; }
+          ['water','fert'].forEach(function(k) {
+            var localDate  = STATE.records[id][k] ? new Date(STATE.records[id][k]).getTime() : 0;
+            var remoteDate = remote.records[id][k] ? new Date(remote.records[id][k]).getTime() : 0;
+            if (remoteDate > localDate) { STATE.records[id][k] = remote.records[id][k]; changed = true; }
+          });
+        });
+      }
+      if (changed) {
+        try { localStorage.setItem(SK, JSON.stringify(STATE)); } catch(e) {}
+        renderAll();
+      }
     }
-    // If equal, nothing to do
   } catch(e) { /* silent */ }
 }
 
