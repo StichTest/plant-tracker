@@ -547,7 +547,7 @@ header{padding:36px 32px 0;display:flex;align-items:flex-end;justify-content:spa
 
     <!-- Shown when connected -->
     <div id="cloud-connected-view" style="display:none">
-      <div style="background:rgba(58,138,58,.08);border:1px solid rgba(58,138,58,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+      <div style="background:rgba(58,138,58,.08);border:1px solid rgba(58,138,58,.2);border-radius:10px;padding:14px 16px;margin-bottom:12px">
         <div style="font-size:.74rem;color:var(--moss);font-weight:500;margin-bottom:10px">✅ Cloud attivo</div>
         <div style="font-size:.73rem;color:var(--forest);margin-bottom:6px">
           <b>Bin ID</b> — copialo sugli altri dispositivi:
@@ -556,6 +556,15 @@ header{padding:36px 32px 0;display:flex;align-items:flex-end;justify-content:spa
           <code id="cloud-binid-display" style="font-size:.78rem;background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:7px 10px;flex:1;word-break:break-all;color:var(--ink)"></code>
           <button onclick="copyBinId()" style="font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:7px 12px;border:none;background:var(--moss);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap" id="btn-copy-binid">Copia</button>
         </div>
+      </div>
+      <div style="background:rgba(58,100,138,.06);border:1px solid rgba(58,100,138,.18);border-radius:10px;padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:.74rem;color:var(--forest);font-weight:500;margin-bottom:6px">✦ Compila con AI — chiave Gemini</div>
+        <div style="font-size:.71rem;color:var(--sage);margin-bottom:8px">Opzionale. Consente di compilare automaticamente i dati di ogni nuova pianta usando Gemini AI (gratuito). Ottieni la chiave su <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API key.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="anthropic-key-input" placeholder="AIza..." autocomplete="off" style="flex:1;font-family:monospace;font-size:.78rem;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;background:#fff">
+          <button onclick="saveAnthropicKey()" style="font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;padding:7px 14px;border:none;background:var(--forest);color:#fff;border-radius:8px;cursor:pointer;white-space:nowrap">Salva</button>
+        </div>
+        <div id="anthropic-key-status" style="font-size:.69rem;margin-top:6px;color:var(--sage)"></div>
       </div>
       <div class="cloud-error" id="cloud-error-connected"></div>
       <div class="modal-actions">
@@ -602,59 +611,61 @@ function fmtVol(ml) {
 
 var DEFAULT_PLANTS = {
   balcone: [
-    {id:'gelsomino', n:'Falso gelsomino', vol:700,  notes:'Terreno leggermente umido, ben drenato. Evita ristagni. Sotto -5C proteggi il vaso.',                              sw:{p:{n:3,x:4},  e:{n:1,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:28,potB:20,potH:26, fertDose:'5ml per 1L · su substrato umido',              ft:'Fiorite',         fn:14,fx:14, pruning:'Pota dopo la fioritura primaverile. Rimuovi i rami che escono dalla forma e accorcia quelli lunghi di un terzo. Dirada i rami più vecchi per favorire quelli nuovi.'},
-    {id:'eucalipto', n:'Eucalipto',        vol:1500, notes:'Lascia asciugare i primi cm tra un annaffiatura e l altra. Teme il ristagno piu della siccita.',                   sw:{p:{n:4,x:5},  e:{n:3,x:3},  a:{n:7,x:7},  i:{n:21,x:28}}, potD:35,potB:26,potH:35, fertDose:'5ml per 1L · su substrato umido',              ft:'Universale',      fn:21,fx:28, pruning:'Pota in primavera per controllare le dimensioni — ricaccia vigoroso anche dopo potature drastiche. Taglia sopra un nodo fogliare.'},
-    {id:'loropet',   n:'Loropetalum ⚠',   vol:600,  notes:'Non lasciarlo mai completamente asciutto in agosto. Usa terriccio specifico per acidofile.',                        sw:{p:{n:3,x:3},  e:{n:1,x:2},  a:{n:5,x:5},  i:{n:21,x:28}}, potD:28,potB:20,potH:28, fertDose:'5ml per 1L acidofile · mai universale',       ft:'Acidofile',       fn:14,fx:21, pruning:'Pota dopo la fioritura primaverile accorciando i rami di un terzo. Rimuovi i rami che crescono verso l\'interno per migliorare l\'arieggiamento.'},
-    {id:'fotinia',   n:'Fotinia',          vol:600,  notes:'Non bagnare il fogliame. Sensibile all Entomosporium (macchie marroni fungine). Garantisci ventilazione.',          sw:{p:{n:3,x:4},  e:{n:2,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:30,potB:22,potH:28, fertDose:'5ml per 1L · su substrato umido',              ft:'Universale',      fn:21,fx:21, pruning:'Pota in primavera dopo la fioritura accorciando i rami nuovi di circa la metà. Non bagnare le foglie durante la potatura — favorisce le malattie fungine.'},
-    {id:'oleandro',  n:'Oleandro',         vol:1000, notes:'Tutte le parti sono tossiche. Non bruciare mai i rami potati. Sotto -5C copri il vaso.',                            sw:{p:{n:3,x:4},  e:{n:1,x:2},  a:{n:5,x:7},  i:{n:21,x:28}}, potD:32,potB:24,potH:30, fertDose:'5-10ml per 1L · pianta molto esigente',        ft:'Fiorite',         fn:14,fx:14, pruning:'Pota dopo la fioritura estiva accorciando i rami di un terzo. Usa sempre guanti — tutto è tossico. Non bruciare mai i rami di scarto.'},
-    {id:'ginepro',   n:'Ginepro',          vol:400,  notes:'Soffre piu per eccesso di cure che per mancanza. Troppo azoto rende la crescita disordinata. Teme il ristagno.',   sw:{p:{n:5,x:6},  e:{n:4,x:4},  a:{n:7,x:10}, i:{n:35,x:42}}, potD:24,potB:17,potH:22, fertDose:'5ml per 1L · oppure granulare a marzo',        ft:'Conifere',        fn:28,fx:42, pruning:'Pota leggermente in primavera solo i rametti verdi dell\'anno. Mai tagliare nel legno vecchio — non ricresce. Usa cesoie da bonsai per precisione.'}
+    {id:'gelsomino', n:'Falso gelsomino Cortile', vol:700, notes:'Terreno leggermente umido, ben drenato. Evita ristagni. Sotto -5C proteggi il vaso.', pruning:'Pota dopo la fioritura primaverile. Rimuovi i rami che escono dalla forma e accorcia quelli lunghi di un terzo. Dirada i rami più vecchi per favorire quelli nuovi.', fertDose:'5ml per 1L · su substrato umido', potD:28,potB:20,potH:26, sw:{p:{n:3,x:4},e:{n:1,x:2},a:{n:5,x:7},i:{n:21,x:28}}, ft:'Fiorite', fn:14,fx:14},
+    {id:'eucalipto', n:'Eucalipto', vol:1500, notes:'Lascia asciugare i primi cm tra un annaffiatura e l altra. Teme il ristagno piu della siccita.', pruning:'Pota in primavera per controllare le dimensioni — ricaccia vigoroso anche dopo potature drastiche. Taglia sopra un nodo fogliare.', fertDose:'5ml per 1L · su substrato umido', potD:35,potB:26,potH:35, sw:{p:{n:4,x:5},e:{n:3,x:3},a:{n:7,x:7},i:{n:21,x:28}}, ft:'Universale', fn:21,fx:28},
+    {id:'loropet', n:'Loropetalum ⚠', vol:600, notes:'Non lasciarlo mai completamente asciutto in agosto. Usa terriccio specifico per acidofile.', pruning:'Pota dopo la fioritura primaverile accorciando i rami di un terzo. Rimuovi i rami che crescono verso l\'interno per migliorare l\'arieggiamento.', fertDose:'5ml per 1L acidofile · mai universale', potD:28,potB:20,potH:28, sw:{p:{n:3,x:3},e:{n:1,x:2},a:{n:5,x:5},i:{n:21,x:28}}, ft:'Acidofile', fn:14,fx:21},
+    {id:'fotinia', n:'Fotinia', vol:600, notes:'Non bagnare il fogliame. Sensibile all Entomosporium (macchie marroni fungine). Garantisci ventilazione.', pruning:'Pota in primavera dopo la fioritura accorciando i rami nuovi di circa la metà. Non bagnare le foglie durante la potatura — favorisce le malattie fungine.', fertDose:'5ml per 1L · su substrato umido', potD:30,potB:22,potH:28, sw:{p:{n:3,x:4},e:{n:2,x:2},a:{n:5,x:7},i:{n:21,x:28}}, ft:'Universale', fn:21,fx:21},
+    {id:'oleandro', n:'Oleandro', vol:1000, notes:'Tutte le parti sono tossiche. Non bruciare mai i rami potati. Sotto -5C copri il vaso.', pruning:'Pota dopo la fioritura estiva accorciando i rami di un terzo. Usa sempre guanti — tutto è tossico. Non bruciare mai i rami di scarto.', fertDose:'5-10ml per 1L · pianta molto esigente', potD:32,potB:24,potH:30, sw:{p:{n:3,x:4},e:{n:1,x:2},a:{n:5,x:7},i:{n:21,x:28}}, ft:'Fiorite', fn:14,fx:14},
+    {id:'ginepro', n:'Ginepro', vol:400, notes:'Soffre piu per eccesso di cure che per mancanza. Troppo azoto rende la crescita disordinata. Teme il ristagno.', pruning:'Pota leggermente in primavera solo i rametti verdi dell\'anno. Mai tagliare nel legno vecchio — non ricresce. Usa cesoie da bonsai per precisione.', fertDose:'5ml per 1L · oppure granulare a marzo', potD:24,potB:17,potH:22, sw:{p:{n:5,x:6},e:{n:4,x:4},a:{n:7,x:10},i:{n:35,x:42}}, ft:'Conifere', fn:28,fx:42},
+    {id:'gelsomino_2', n:'Falso gelsomino Piazza', vol:700, notes:'Terreno leggermente umido, ben drenato. Evita ristagni. Sotto -5C proteggi il vaso.', pruning:'Pota dopo la fioritura primaverile. Rimuovi i rami che escono dalla forma e accorcia quelli lunghi di un terzo. Dirada i rami più vecchi per favorire quelli nuovi.', fertDose:'5ml per 1L · su substrato umido', potD:28,potB:20,potH:26, sw:{p:{n:3,x:4},e:{n:1,x:2},a:{n:5,x:7},i:{n:21,x:28}}, ft:'Fiorite', fn:14,fx:14},
+    {id:'gerani', n:'Gerani', vol:250, notes:'Abbondante ma senza ristagni nel sottovaso — svuota dopo 30 min. Evita di bagnare foglie e fiori.', pruning:'Pota drasticamente a febbraio-marzo lasciando 2-3 nodi per ramo. Durante la stagione rimuovi i fiori appassiti regolarmente per favorire la fioritura continua.', fertDose:'5ml per 1L · ogni annaffiatura con concime', potD:14,potB:10,potH:12, sw:{p:{n:5,x:7},e:{n:2,x:3},a:{n:5,x:7},i:{n:7,x:10}}, ft:'Fiorite', fn:7,fx:10},
+    {id:'alloro', n:'Alloro', vol:200, notes:'Rinvasa ogni 2-3 anni. Teme ristagni e venti gelidi. Foglie piu sottili e profumate del lauroceraso.', pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature drastiche. Rimuovi i polloni alla base per mantenere un fusto pulito.', fertDose:'granulare bio: 20-30g per vaso da 20cm', potD:14,potB:10,potH:12, sw:{p:{n:4,x:5},e:{n:2,x:3},a:{n:7,x:7},i:{n:21,x:28}}, ft:'Bio', fn:21,fx:28},
   ],
   interno: [
-    {id:'portulac',   n:'Portulacaria afra',         vol:150, notes:'Annaffia solo quando il terreno e completamente asciutto. Foglioline turgide = sta bene; avvizzite = annaffia.',                                            sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:49}}, potD:14,potB:10,potH:12, fertDose:'2.5ml per 1L (mezza dose) · max ogni 6 sett.',             ft:'Succulente 1/2d', fn:28,fx:42, pruning:'Pota liberamente in primavera per dare forma — risponde bene alle potature anche drastiche. Ottima come bonsai.'},
-    {id:'pachira',    n:'Pachira',                   vol:400, notes:'Il terreno deve asciugarsi a meta tra un annaffiatura e l altra. Metti una vaschetta con acqua e sassi sotto.',                                           sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:14,x:21},i:{n:14,x:21}}, potD:20,potB:14,potH:18, fertDose:'5ml per 1L · su substrato leggermente umido',             ft:'Universale',      fn:14,fx:21, pruning:'Pota in primavera sopra un nodo per controllare la forma. Evita di toccare il tronco intrecciato. Accorcia i rami lunghi di un terzo.'},
-    {id:'pothos_2_2', n:'Pothos palo',               vol:650, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.',                                                   sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:10,x:14},i:{n:14,x:14}}, potD:20,potB:14,potH:17, fertDose:'5ml per 1L · su substrato umido',                          ft:'Universale',      fn:14,fx:21, pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.'},
-    {id:'kentia',     n:'Kentia',                    vol:500, notes:'Non tolera ne siccita prolungata ne ristagno. Nebulizza le foglie — le punte ingialliscono se l aria e troppo secca.',                                    sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:14,x:21},i:{n:14,x:21}}, potD:26,potB:19,potH:24, fertDose:'5ml per 1L · nebulizza anche le foglie',                    ft:'Palme',           fn:21,fx:21, pruning:'Non potare mai le foglie verdi, anche se pendenti. Rimuovi solo quelle completamente secche tagliando il picciolo alla base, mai a metà.'},
-    {id:'sansev',     n:'Sansevieria grande',         vol:200, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.',                                        sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, potD:18,potB:13,potH:20, fertDose:'5ml per 1L · mezza dose consigliata in estate',              ft:'Universale',      fn:42,fx:56, pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.'},
-    {id:'agave',      n:'Agave',                     vol:250, notes:'Tollera il secco meglio del freddo. Tienila lontana da correnti d aria fredda.',                                                                          sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:28,x:28}}, potD:20,potB:14,potH:18, fertDose:'2.5ml per 1L (mezza dose) · solo estate',                   ft:'Succulente',      fn:28,fx:42, pruning:'Rimuovi solo le foglie esterne completamente secche tagliando alla base. Usa guanti resistenti — le punte sono affilate.'},
-    {id:'pothos',     n:'Pothos',                    vol:300, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.',                                                   sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:10,x:14},i:{n:14,x:14}}, potD:16,potB:11,potH:14, fertDose:'5ml per 1L · su substrato umido',                          ft:'Universale',      fn:14,fx:21, pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.'},
-    {id:'tradescantia',n:'Tradescantia',             vol:400, notes:'Mantieni leggermente umido. Cresce velocemente — pota spesso per mantenerla compatta.',                                                                   sw:{p:{n:5,x:7},  e:{n:5,x:7},  a:{n:7,x:10}, i:{n:10,x:14}}, potD:18,potB:13,potH:13, fertDose:'5ml per 1L · su substrato umido',                          ft:'Universale',      fn:14,fx:21, pruning:'Pota regolarmente durante tutta la stagione — almeno ogni 4-6 settimane — tagliando sopra un nodo per stimolare la ramificazione.'},
-    {id:'spati',      n:'Spatifillo',                vol:350, notes:'Annaffia dal basso: vaso in piatto d acqua per 20 min poi svuota. Non lasciarlo mai completamente asciutto.',                                             sw:{p:{n:5,x:7},  e:{n:5,x:7},  a:{n:7,x:10}, i:{n:10,x:10}}, potD:18,potB:13,potH:16, fertDose:'5ml per 1L · diluire bene, sensibile ai sali',                 ft:'Fiorite',         fn:14,fx:14, pruning:'Rimuovi i fiori appassiti tagliando lo stelo alla base. Rimuovi le foglie ingiallite. Nessuna potatura strutturale.'},
-    {id:'beaucarn',   n:'Beaucarnea',                vol:200, notes:'Il bulbo alla base accumula acqua — non annaffiare prima che sia completamente asciutto. Il ristagno fa marcire.',                                        sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:42}}, potD:22,potB:16,potH:22, fertDose:'2.5ml per 1L (mezza dose) · solo apr-set',                   ft:'Succulente',      fn:28,fx:42, pruning:'Rimuovi solo le foglie secche tirandole delicatamente verso il basso. Non potare il fusto — non ricresce.'},
-    {id:'pothos_2',   n:'Pothos in alto',            vol:650, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.',                                                   sw:{p:{n:7,x:10}, e:{n:7,x:10}, a:{n:10,x:14},i:{n:14,x:14}}, potD:20,potB:14,potH:17, fertDose:'5ml per 1L · su substrato umido',                          ft:'Universale',      fn:14,fx:21, pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.'},
-    {id:'peperon',    n:'Peperomia serpens',          vol:120, notes:'Aspetta sempre che il terreno sia ben asciutto. Usa concime a meta dose — e sensibile ai sali minerali.',                                                 sw:{p:{n:10,x:14},e:{n:10,x:14},a:{n:14,x:21},i:{n:21,x:21}}, potD:12,potB:9, potH:10, fertDose:'2.5ml per 1L (mezza dose) · molto sensibile ai sali',             ft:'Universale 1/2d', fn:21,fx:28, pruning:'Rimuovi foglie secche o ingiallite. Accorcia i rami troppo lunghi in primavera per mantenere la pianta compatta.'},
-    {id:'sansev_2',   n:'Sansevieria piccola',        vol:150, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.',                                        sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, potD:12,potB:8, potH:12, fertDose:'5ml per 1L · mezza dose consigliata in estate',              ft:'Universale',      fn:42,fx:56, pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.'},
-    {id:'sansev_2_2', n:'Sansevieria camera da letto',vol:150, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.',                                        sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, potD:12,potB:8, potH:12, fertDose:'5ml per 1L · mezza dose consigliata in estate',              ft:'Universale',      fn:42,fx:56, pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.'},
-    {id:'gerani',     n:'Gerani',                    vol:250, notes:'Abbondante ma senza ristagni nel sottovaso — svuota dopo 30 min. Evita di bagnare foglie e fiori.',                                                       sw:{p:{n:5,x:7},  e:{n:2,x:3},  a:{n:5,x:7},  i:{n:7,x:10}},  potD:14,potB:10,potH:12, fertDose:'5ml per 1L · ogni annaffiatura con concime',              ft:'Fiorite',         fn:7, fx:10, pruning:'Pota drasticamente a febbraio-marzo lasciando 2-3 nodi per ramo. Durante la stagione rimuovi i fiori appassiti regolarmente per favorire la fioritura continua.'},
-    {id:'ciclamino',  n:'Ciclamino',                 vol:200, notes:'Annaffia dal basso: piatto d acqua per 20-30 min poi svuota. Non bagnare mai foglie, fiori o centro. In estate quasi stop.',                             sw:{p:{n:5,x:7},  e:{n:21,x:28},a:{n:5,x:7},  i:{n:5,x:7}},  potD:14,potB:10,potH:10, fertDose:'5ml per 1L · solo durante la fioritura (ott-mar)',              ft:'Fiorite',         fn:14,fx:14, pruning:'Rimuovi fiori e foglie appassite tirando il picciolo con un movimento rotatorio (non tagliare). In estate taglia tutto a raso e lascia riposare.'},
-    {id:'mirto',      n:'Mirto',                     vol:150, notes:'Bio obbligatorio se usi bacche e foglie in cucina. Teme il freddo in vaso sotto -3/-5C.',                                                                 sw:{p:{n:4,x:5},  e:{n:2,x:3},  a:{n:7,x:7},  i:{n:28,x:35}}, potD:14,potB:10,potH:10, fertDose:'granulare bio: 20-30g per vaso da 20cm',                     ft:'Bio',             fn:21,fx:28, pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature anche drastiche. Rimuovi i rami che crescono verso l\'interno.'},
-    {id:'alloro',     n:'Alloro',                    vol:200, notes:'Rinvasa ogni 2-3 anni. Teme ristagni e venti gelidi. Foglie piu sottili e profumate del lauroceraso.',                                                    sw:{p:{n:4,x:5},  e:{n:2,x:3},  a:{n:7,x:7},  i:{n:21,x:28}}, potD:14,potB:10,potH:12, fertDose:'granulare bio: 20-30g per vaso da 20cm',                     ft:'Bio',             fn:21,fx:28, pruning:'Pota in primavera e fine estate per mantenere la forma. Sopporta potature drastiche. Rimuovi i polloni alla base per mantenere un fusto pulito.'}
+    {id:'portulac_2', n:'Portulacaria piccola', vol:50, notes:'Annaffia solo quando il terreno e completamente asciutto. Foglioline turgide = sta bene; avvizzite = annaffia. Annaffia abbondantemente finché non vedi l\'acqua uscire dai fori di drenaggio sul fondo del vaso. Questo assicura che tutte le radici ricevano umidità.', pruning:'Pota liberamente in primavera per dare forma — risponde bene alle potature anche drastiche. Ottima come bonsai.', fertDose:'2.5ml per 1L (mezza dose) · max ogni 6 sett.', potD:10,potB:7,potH:10, sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:10,x:12},i:{n:12,x:15}}, ft:'Succulente 1/2d', fn:28,fx:42},
+    {id:'aeonium', n:'Aeonium', vol:100, notes:'Durante l\'estate, entra in riposo e richiede pochissima acqua. Estate (Dormienza): È la fase più delicata. Con il caldo forte, l\'Aeonium va in letargo per difendersi: le rosette si chiudono a riccio e la pianta smette di crescere. Basta una leggera bagnatura ogni 2-3 settimane solo per non far disseccare completamente le radici. Se esageri in questa fase, il rischio marciume è altissimo. Nelle altre stagioni bagna abbondantemente ma solo quando il terriccio è completamente secco. Evita assolutamente i ristagni idrici, non lasciando acqua nei sottovasi. In inverno dirada l\'acqua a una volta al mese o meno, solo quando i fusti o le foglie inferiori accennano a essere leggermente flaccidi. Concime liquido specifico per piante grasse e succulente a mezza dose solo in autunno e primavera.', pruning:'La potatura serve principalmente a due scopi: mantenere la forma compatta ed eseguire la propagazione. Quando potare Il periodo migliore in assoluto è l\'inizio dell\'autunno (settembre/ottobre) o la fine dell\'inverno (febbraio/marzo). Evita tassativamente l\'estate, quando la pianta è in dormienza e non avrebbe le energie per reagire e cicatrizzare al meglio.', fertDose:'', potD:10,potB:7,potH:8, sw:{p:{n:7,x:10},e:{n:14,x:21},a:{n:10,x:14},i:{n:30,x:40}}, ft:'Piante grasse', fn:28,fx:42},
+    {id:'croton_variegato_gold_dust', n:'Croton variegato Gold dust', vol:60, notes:'nebulizza regolarmente le foglie con acqua a temperatura ambiente o utilizza un umidificatore. Mantieni il terriccio leggermente umido durante la primavera e l\'estate, evitando ristagni d\'acqua nel sottovaso. versa l\'acqua lentamente su tutta la superficie. Assicurati che il vaso abbia i fori di drenaggio sul fondo ed elimina sempre l\'acqua in eccesso dal sottovaso dopo 15 minuti per prevenire il marciume radicale. Riduci le annaffiature in autunno e inverno, lasciando asciugare il primo strato di terreno tra un\'irrigazione e l\'altra. Primavera (Marzo – Maggio) Frequenza: ogni 4–6 giorni. Riferimento: irriga quando i primi 1–1,5 cm di terriccio risultano asciutti al tatto. Estate (Giugno – Agosto) Frequenza: ogni 2–4 giorni (in base alla temperatura e all\'umidità ambientale). Riferimento: il terriccio in vasi così piccoli si asciuga molto rapidamente; mantieni il terreno costantemente leggermente umido, senza farlo mai seccare del tutto. Autunno (Settembre – Novembre) Frequenza: ogni 6–8 giorni. Riferimento: con il calo delle temperature e della luce, riduci la frequenza lasciando asciugare la metà superiore del terriccio. Inverno (Dicembre – Febbraio) Frequenza: ogni 10–14 giorni. Riferimento: la pianta entra in riposo vegetativo. Annaffia solo quando il terriccio è quasi completamente asciutto, mantenendo l\'acqua a temperatura ambiente (evita acqua fredda di rubinetto per non causare shock termico alle radici). Periodo di concimazione: da aprile a settembre (stagione di crescita). Frequenza: ogni 14–20 giorni. Dosaggio: utilizza un concime liquido bilanciato per piante verdi diluito alla metà della dose raccomandata sulla confezione, applicandolo sempre su terreno già leggermente umido per evitare di bruciare le radici nel vaso piccolo. Autunno e Inverno: sospendi completamente la concimazione.', pruning:'Richiede molta luce diffusa per mantenere la variegatura brillante delle foglie. Evita il sole diretto prolungato nelle ore più calde dell\'estate per non bruciare le foglie. il rinvaso andrà effettuato quando le radici avranno occupato tutto lo spazio disponibile (solitamente ogni 1–2 anni). Periodo migliore: inizio primavera (marzo-aprile), all\'inizio della ripresa vegetativa. Dimensioni nuovo vaso: scegli un vaso con fori di drenaggio di 12–13 cm di diametro (evita vasi troppo grandi per non accumulare ristagni d\'acqua). Miscela di terriccio: prepara un substrato leggero e drenante composto da: 70% terriccio universale di buona qualità o terriccio per piante verdi. 30% perlite, pomice o lapillo vulcanico per favorire il drenaggio. Uno strato di 1-2 cm di argilla espansa sul fondo del vaso. Procedimento: Moilla leggermente il terriccio il giorno prima per facilitare l\'estrazione. Sfila delicatamente la pianta mantenendo integro il pane di terra. Libera delicatamente le radici più esterne se appaiono molto fitte o intrecciate. Posiziona la pianta al centro del nuovo vaso, aggiungi il terriccio fresco attorno, pressa leggermente e annaffia con circa 100 ml di acqua. Potatura e cimatura Il Croton Gold Dust non richiede potature strutturali severe, ma interventi mirati per mantenerlo folto ed evitare che cresca in modo troppo diradato. Periodo migliore: inizio primavera. Cimatura (per stimolare la ramificazione): Se la pianta cresce solo in altezza sviluppando un unico fusto, taglia la punta apicale (gli ultimi 2-3 cm sopra un nodo). Questo intervento stimola la pianta a produrre nuovi getti laterali, rendendo la chioma più densa e compatta. Pulizia: Rimuovi regolarmente le foglie secche, ingiallite o danneggiate tagliandole alla base del picciolo. Usa sempre forbici o cesoie ben affilate e disinfettate con alcool. Precauzione: Durante la potatura, il Croton emette un lattice bianco che può causare irritazioni alla pelle. Indossa sempre i guanti ed evita il contatto con gli occhi. In caso di fuoriuscita di lattice dal taglio, puoi tamponarlo con un batuffolo di cotone bagnato con acqua fredda per bloccare il flusso.', fertDose:'', potD:10,potB:7,potH:8, sw:{p:{n:4,x:6},e:{n:2,x:4},a:{n:6,x:8},i:{n:10,x:14}}, ft:'Universale 1/2 dose', fn:14,fx:20},
+    {id:'edera_variegata', n:'Edera variegata', vol:700, notes:'Mantieni leggermente umido. Tollera l\'ombra. Nebulizza in ambienti secchi.', pruning:'Pota in primavera per controllare la crescita. Taglia i rami troppo lunghi e rimuovi quelli secchi. Tollera anche potature drastiche e ricresce vigorosa.', fertDose:'5ml per 1L · ogni 3 settimane', potD:22,potB:15,potH:18, sw:{p:{n:7,x:10},e:{n:5,x:7},a:{n:10,x:14},i:{n:14,x:21}}, ft:'Universale', fn:21,fx:28},
+    {id:'dracena_marginata', n:'Dracena marginata', vol:250, notes:'Nebulizza. Lascia asciugare i primi 3-4 cm. Sensibile al fluoro — usa acqua non calcarea. Versa l\'acqua lentamente su tutta la superficie del terriccio finché non vedi scendere le prime gocce dai fori di drenaggio sul fondo del vaso. Questo assicura che tutte le radici siano idratate. Svuota sempre il sottovaso per evitare ristagni d\'acqua che causano il marciume radicale. Non bagnare di nuovo finché il terriccio non è completamente asciutto anche in profondità (infilando un dito per 4-5 cm).', pruning:'Pota il fusto in primavera per stimolare nuovi getti laterali. Rimuovi le foglie secche tirandole verso il basso. Forbici pulite obbligatorie.', fertDose:'5ml per 1L · max ogni 3 settimane', potD:15,potB:11,potH:15, sw:{p:{n:10,x:14},e:{n:7,x:10},a:{n:14,x:21},i:{n:21,x:28}}, ft:'Universale', fn:21,fx:28},
+    {id:'kentia', n:'Kentia', vol:500, notes:'Non tolera ne siccita prolungata ne ristagno. Nebulizza le foglie — le punte ingialliscono se l aria e troppo secca.', pruning:'Non potare mai le foglie verdi, anche se pendenti. Rimuovi solo quelle completamente secche tagliando il picciolo alla base, mai a metà.', fertDose:'5ml per 1L · nebulizza anche le foglie', potD:26,potB:19,potH:24, sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:14,x:21},i:{n:14,x:21}}, ft:'Palme', fn:21,fx:21},
+    {id:'crassula_ovata', n:'Crassula ovata', vol:150, notes:'Lascia asciugare completamente tra le annaffiature. In inverno quasi stop.', pruning:'Pota in primavera per mantenere la forma compatta. Taglia sopra un nodo fogliare. Tollera potature anche drastiche.', fertDose:'2.5ml per 1L (mezza dose) · solo primavera-estate', potD:15,potB:11,potH:15, sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:42}}, ft:'Succulente', fn:28,fx:42},
+    {id:'sansev', n:'Sansevieria grande', vol:200, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.', pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.', fertDose:'5ml per 1L · mezza dose consigliata in estate', potD:18,potB:13,potH:20, sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, ft:'Universale', fn:42,fx:56},
+    {id:'pothos', n:'Pothos', vol:300, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.', pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.', fertDose:'5ml per 1L · su substrato umido', potD:16,potB:11,potH:14, sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:10,x:14},i:{n:14,x:14}}, ft:'Universale', fn:14,fx:21},
+    {id:'spati', n:'Spatifillo', vol:450, notes:'Annaffia dal basso: vaso in piatto d acqua per 20 min poi svuota. Non lasciarlo mai completamente asciutto.', pruning:'Rimuovi i fiori appassiti tagliando lo stelo alla base. Rimuovi le foglie ingiallite. Nessuna potatura strutturale.', fertDose:'5ml per 1L · diluire bene, sensibile ai sali', potD:18,potB:13,potH:16, sw:{p:{n:5,x:7},e:{n:3,x:5},a:{n:7,x:10},i:{n:10,x:10}}, ft:'Fiorite', fn:14,fx:14},
+    {id:'beaucarn', n:'Beaucarnea', vol:200, notes:'Il bulbo alla base accumula acqua — non annaffiare prima che sia completamente asciutto. Il ristagno fa marcire.', pruning:'Rimuovi solo le foglie secche tirandole delicatamente verso il basso. Non potare il fusto — non ricresce.', fertDose:'2.5ml per 1L (mezza dose) · solo apr-set', potD:22,potB:16,potH:22, sw:{p:{n:14,x:21},e:{n:14,x:21},a:{n:21,x:28},i:{n:35,x:42}}, ft:'Succulente', fn:28,fx:42},
+    {id:'pothos_2', n:'Pothos in alto', vol:500, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.', pruning:'Rimuovi solo foglie secche o ingiallite. Accorcia i rami lunghissimi in primavera se vuoi compattarlo. Le talee radica facilmente in acqua.', fertDose:'5ml per 1L · su substrato umido', potD:20,potB:14,potH:17, sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:10,x:14},i:{n:14,x:14}}, ft:'Universale', fn:14,fx:21},
+    {id:'zamioculcas', n:'Zamioculcas', vol:450, notes:'Tollera quasi l\'oscurità. Annaffia solo quando il terriccio è completamente asciutto. Annaffia a fondo finché l\'acqua non fuoriesce dai fori di drenaggio del vaso, poi svuota completamente il sottovaso. Drenaggio: La Zamioculcas teme fortemente i ristagni idrici. Usa un terriccio molto drenante (ad esempio una miscela per piante verdi integrata con perlite o pomice) e assicurati che il vaso abbia i fori sul fondo.', pruning:'Rimuovi solo i rami ingialliti o secchi tagliando alla base del fusto. Nessuna potatura di forma necessaria.', fertDose:'5ml per 1L · mezza dose', potD:17,potB:12,potH:16, sw:{p:{n:20,x:28},e:{n:15,x:20},a:{n:28,x:42},i:{n:42,x:56}}, ft:'Universale', fn:42,fx:56},
+    {id:'pothos_variegato', n:'Pothos variegato', vol:600, notes:'Aspetta che i primi 2-3 cm di terra siano asciutti. Segnala la sete con foglie leggermente appassite.', pruning:'Rimuovi solo foglie secche o ingiallite. Nessuna potatura vera — accorcia i rami lunghissimi in primavera se vuoi compattarlo.', fertDose:'5ml per 1L · su substrato umido', potD:18,potB:13,potH:18, sw:{p:{n:7,x:10},e:{n:7,x:10},a:{n:10,x:14},i:{n:14,x:14}}, ft:'Universale', fn:14,fx:21},
+    {id:'sansev_2', n:'Sansevieria piccola', vol:150, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.', pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.', fertDose:'5ml per 1L · mezza dose consigliata in estate', potD:12,potB:8,potH:12, sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, ft:'Universale', fn:42,fx:56},
+    {id:'sansev_2_2', n:'Sansevieria camera da letto', vol:150, notes:'Errore comune: annaffiarla troppo — e la causa principale di morte. Quasi impossibile danneggiarla per siccita.', pruning:'Rimuovi solo le foglie completamente secche tagliando alla base. Non serve altra potatura.', fertDose:'5ml per 1L · mezza dose consigliata in estate', potD:12,potB:8,potH:12, sw:{p:{n:21,x:28},e:{n:21,x:28},a:{n:28,x:42},i:{n:42,x:56}}, ft:'Universale', fn:42,fx:56},
   ]
 };
 
 var DEFAULT_RECORDS = {
-  gelsomino:   {water:'2026-04-12T10:04:18.086Z', fert:'2026-03-16T09:00:00.000Z'},
-  eucalipto:   {water:'2026-04-12T10:04:18.687Z', fert:'2026-03-16T09:00:00.000Z'},
-  loropet:     {water:'2026-04-12T10:04:20.087Z', fert:'2026-03-16T09:00:00.000Z'},
-  fotinia:     {water:'2026-04-12T10:04:20.820Z', fert:'2026-03-16T09:00:00.000Z'},
-  oleandro:    {water:'2026-04-12T10:04:24.305Z', fert:'2026-03-16T09:00:00.000Z'},
-  ginepro:     {water:'2026-04-12T10:04:26.055Z', fert:'2026-03-16T09:00:00.000Z'},
-  pachira:     {water:null,                        fert:'2026-03-16T09:00:00.000Z'},
-  kentia:      {water:'2026-04-14T15:55:20.994Z', fert:'2026-03-16T09:00:00.000Z'},
-  sansev:      {water:'2026-04-14T15:56:13.975Z', fert:'2026-03-16T09:00:00.000Z'},
-  pothos:      {water:'2026-04-12T09:38:44.251Z', fert:'2026-03-16T09:00:00.000Z'},
-  spati:       {water:'2026-04-11T18:14:02.188Z', fert:'2026-03-16T09:00:00.000Z'},
-  ciclamino:   {water:'2026-04-12T10:01:08.148Z', fert:'2026-03-16T09:00:00.000Z'},
-  beaucarn:    {water:'2026-04-11T18:14:06.524Z', fert:null},
-  peperon:     {water:'2026-04-11T18:14:11.425Z', fert:null},
-  portulac:    {water:'2026-04-12T09:36:45.760Z', fert:null},
-  pothos_2_2:  {water:'2026-04-12T09:49:03.959Z', fert:null},
-  tradescantia:{water:'2026-04-12T09:49:28.115Z', fert:null},
-  pothos_2:    {water:'2026-04-12T09:51:48.877Z', fert:null},
-  sansev_2:    {water:'2026-04-12T09:53:55.499Z', fert:null},
-  sansev_2_2:  {water:'2026-04-12T09:54:31.377Z', fert:null},
-  gerani:      {water:'2026-04-12T10:01:07.199Z', fert:null},
-  mirto:       {water:'2026-04-12T10:01:09.416Z', fert:null},
-  alloro:      {water:'2026-04-12T10:01:10.132Z', fert:null}
+  gelsomino: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-18T08:44:59.345Z'},
+  eucalipto: {water:'2026-09-06T08:01:45.956Z', fert:'2026-07-06T08:08:53.016Z'},
+  loropet: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-18T08:45:00.845Z'},
+  fotinia: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-06T08:11:23.718Z'},
+  oleandro: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-09T18:36:03.748Z'},
+  ginepro: {water:'2026-09-06T08:01:45.956Z', fert:'2026-07-09T18:39:11.624Z'},
+  kentia: {water:'2026-08-31T06:04:43.489Z', fert:'2026-06-27T09:31:29.945Z'},
+  sansev: {water:'2026-08-23T09:19:27.723Z', fert:'2026-06-20T06:58:36.295Z'},
+  pothos: {water:'2026-09-09T06:59:22.177Z', fert:'2026-08-31T06:06:30.371Z'},
+  spati: {water:'2026-09-12T06:52:27.509Z', fert:'2026-08-30T21:20:44.073Z'},
+  beaucarn: {water:'2026-09-09T07:00:35.336Z', fert:'2026-08-23T09:22:01.406Z'},
+  pothos_2: {water:'2026-09-09T07:03:07.320Z', fert:'2026-09-09T07:03:07.320Z'},
+  sansev_2: {water:'2026-08-23T09:19:12.368Z', fert:'2026-06-20T07:04:15.553Z'},
+  sansev_2_2: {water:'2026-08-23T09:19:10.818Z', fert:'2026-06-20T07:05:53.334Z'},
+  gerani: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-18T08:45:03.495Z'},
+  alloro: {water:'2026-09-06T08:01:45.956Z', fert:'2026-07-03T10:22:37.894Z'},
+  gelsomino_2: {water:'2026-09-12T06:49:28.263Z', fert:'2026-07-09T18:36:04.864Z'},
+  edera_variegata: {water:'2026-08-31T06:04:36.869Z', fert:'2026-06-22T20:36:20.598Z'},
+  crassula_ovata: {water:'2026-08-31T06:05:05.261Z', fert:null},
+  pothos_variegato: {water:'2026-08-31T06:06:04.363Z', fert:'2026-07-11T08:09:58.181Z'},
+  portulac_2: {water:'2026-09-09T06:57:13.469Z', fert:null},
+  aeonium: {water:'2026-09-09T06:57:42.077Z', fert:null},
+  croton_variegato_gold_dust: {water:'2026-09-09T15:07:50.387Z', fert:null},
+  dracena_marginata: {water:'2026-09-12T12:18:17.280Z', fert:null},
 };
 
 var STATE = {}, lastSaved = null, currentTab = 'balcone', currentSeason = null, manualSeason = false;
@@ -663,7 +674,15 @@ var IRR_SK = 'pt_irrigation_on';
 var FERT_ACTIVE = {p:true, e:true, a:true, i:false};
 
 // ── SEASON ──
-function autoSeason() { var m = new Date().getMonth()+1; if(m>=3&&m<=5)return'p'; if(m>=6&&m<=8)return'e'; if(m>=9&&m<=11)return'a'; return'i'; }
+function autoSeason() {
+  var now = new Date();
+  var m = now.getMonth() + 1;
+  var d = now.getDate();
+  if ((m === 3 && d >= 21) || m === 4 || m === 5 || (m === 6 && d <= 20)) return 'p';
+  if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22)) return 'e';
+  if ((m === 9 && d >= 23) || m === 10 || m === 11 || (m === 12 && d <= 20)) return 'a';
+  return 'i';
+}
 function getSeason() { return currentSeason || autoSeason(); }
 function setSeason(s, manual) {
   if (manual) { currentSeason = s; manualSeason = true; }
@@ -1315,6 +1334,23 @@ function findPlantInDb(name) {
   return bestScore >= 60 ? best : null;
 }
 
+// ── ANTHROPIC/GEMINI KEY ──
+var ANTHROPIC_SK = 'pt_anthropic_key';
+function getAnthropicKey() { return localStorage.getItem(ANTHROPIC_SK) || ''; }
+function saveAnthropicKey() {
+  var key = document.getElementById('anthropic-key-input').value.trim();
+  var statusEl = document.getElementById('anthropic-key-status');
+  if (!key) {
+    localStorage.removeItem(ANTHROPIC_SK);
+    statusEl.style.color = 'var(--sage)';
+    statusEl.textContent = 'Chiave rimossa — verrà usato il database locale.';
+    return;
+  }
+  localStorage.setItem(ANTHROPIC_SK, key);
+  statusEl.style.color = 'var(--moss)';
+  statusEl.textContent = '✅ Chiave salvata — il pulsante "Compila con AI" userà Gemini.';
+}
+
 // ── AI AUTOFILL ──
 async function aiAutofill() {
   var name = document.getElementById('f-name').value.trim();
@@ -1322,36 +1358,205 @@ async function aiAutofill() {
   var btn = document.getElementById('btn-ai-fill');
   if (!name) { statusEl.style.color = 'var(--red-dot)'; statusEl.textContent = 'Inserisci prima il nome della pianta.'; return; }
 
-  statusEl.style.color = 'var(--sage)';
-  statusEl.textContent = '🔍 Ricerca in corso…';
   btn.disabled = true; btn.style.opacity = '.5';
+  statusEl.style.color = 'var(--sage)';
 
-  var plant = findPlantInDb(name);
+  var apiKey = getAnthropicKey();
 
-  if (plant) {
-    document.getElementById('f-ftype').value    = plant.ftype;
-    document.getElementById('f-notes').value    = plant.notes;
-    document.getElementById('f-pruning').value  = plant.pruning || '';
-    document.getElementById('f-fertdose').value = plant.fertDose;
-    document.getElementById('f-pwn').value      = plant.pw[0];
-    document.getElementById('f-pwx').value      = plant.pw[1];
-    document.getElementById('f-ewn').value      = plant.ew[0];
-    document.getElementById('f-ewx').value      = plant.ew[1];
-    document.getElementById('f-awn').value      = plant.aw[0];
-    document.getElementById('f-awx').value      = plant.aw[1];
-    document.getElementById('f-iwn').value      = plant.iw[0];
-    document.getElementById('f-iwx').value      = plant.iw[1];
-    document.getElementById('f-fn').value       = plant.f[0];
-    document.getElementById('f-fx').value       = plant.f[1];
-    statusEl.style.color = 'var(--moss)';
-    statusEl.textContent = '✅ Dati trovati — controlla e modifica se necessario';
+  if (apiKey) {
+    statusEl.textContent = '✦ AI sta compilando i dati…';
+    try {
+      var prompt = 'Sei un esperto di piante da appartamento e da balcone, con conoscenza del clima di Milano (zona 8b, inverni miti, estati calde). '
+        + 'Fornisci i dati di cura ottimali per una pianta in vaso: "' + name + '".\n'
+        + 'Rispondi SOLO con un oggetto JSON valido su una riga, senza testo aggiuntivo, senza backtick, senza commenti.\n'
+        + 'Formato esatto (tutti i campi obbligatori):\n'
+        + '{"ftype":"tipo concime (es. Universale, Fiorite, Acidofile, Succulente, Palme, Bio)","notes":"metodo annaffiatura max 150 car","pruning":"note potatura max 150 car","fertDose":"dose concime es. 5ml per 1L su substrato umido","pwn":giorni_min_p,"pwx":giorni_max_p,"ewn":giorni_min_e,"ewx":giorni_max_e,"awn":giorni_min_a,"awx":giorni_max_a,"iwn":giorni_min_i,"iwx":giorni_max_i,"fn":giorni_min_concime,"fx":giorni_max_concime}\n'
+        + 'pwn/pwx=primavera, ewn/ewx=estate, awn/awx=autunno, iwn/iwx=inverno. Tutti valori interi positivi.';
+
+      var res = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 400 }
+          })
+        }
+      );
+
+      if (!res.ok) {
+        var err = await res.json().catch(function(){ return {}; });
+        var msg = err.error ? err.error.message : 'Errore API ' + res.status;
+        throw new Error(msg);
+      }
+
+      var data = await res.json();
+      var text = (((data.candidates || [])[0] || {}).content || {}).parts;
+      text = (text || []).map(function(p){ return p.text || ''; }).join('').trim();
+      text = text.replace(/```json|```/g, '').trim();
+
+      var d = JSON.parse(text);
+      var numFields = ['pwn','pwx','ewn','ewx','awn','awx','iwn','iwx','fn','fx'];
+      numFields.forEach(function(k){ if (!d[k] || isNaN(d[k])) throw new Error('Campo mancante: ' + k); });
+
+      fillForm(d);
+      statusEl.style.color = 'var(--moss)';
+      statusEl.textContent = '✅ Compilato da Gemini — controlla e modifica se necessario';
+    } catch(e) {
+      statusEl.style.color = 'var(--terra)';
+      statusEl.textContent = '⚠️ Errore API (' + (e.message || 'riprova') + ') — provo nel database locale…';
+      var plant = findPlantInDb(name);
+      if (plant) { fillFormFromDb(plant); statusEl.style.color = 'var(--moss)'; statusEl.textContent = '✅ Trovato nel database locale — controlla e modifica'; }
+    }
   } else {
-    statusEl.style.color = 'var(--terra)';
-    statusEl.textContent = '⚠️ Pianta non trovata nel database — inserisci i dati manualmente';
+    statusEl.textContent = '🔍 Ricerca nel database locale…';
+    var plant = findPlantInDb(name);
+    if (plant) {
+      fillFormFromDb(plant);
+      statusEl.style.color = 'var(--moss)';
+      statusEl.textContent = '✅ Dati trovati — controlla e modifica se necessario';
+    } else {
+      statusEl.style.color = 'var(--terra)';
+      statusEl.textContent = '⚠️ Pianta non trovata. Aggiungi una chiave Gemini in ☁️ Impostazioni cloud per usare l\'AI su qualsiasi pianta.';
+    }
   }
 
   btn.disabled = false; btn.style.opacity = '1';
 }
+
+function fillForm(d) {
+  if (d.ftype)    document.getElementById('f-ftype').value    = d.ftype;
+  if (d.notes)    document.getElementById('f-notes').value    = d.notes;
+  if (d.pruning)  document.getElementById('f-pruning').value  = d.pruning;
+  if (d.fertDose) document.getElementById('f-fertdose').value = d.fertDose;
+  if (d.pwn)  document.getElementById('f-pwn').value  = d.pwn;
+  if (d.pwx)  document.getElementById('f-pwx').value  = d.pwx;
+  if (d.ewn)  document.getElementById('f-ewn').value  = d.ewn;
+  if (d.ewx)  document.getElementById('f-ewx').value  = d.ewx;
+  if (d.awn)  document.getElementById('f-awn').value  = d.awn;
+  if (d.awx)  document.getElementById('f-awx').value  = d.awx;
+  if (d.iwn)  document.getElementById('f-iwn').value  = d.iwn;
+  if (d.iwx)  document.getElementById('f-iwx').value  = d.iwx;
+  if (d.fn)   document.getElementById('f-fn').value   = d.fn;
+  if (d.fx)   document.getElementById('f-fx').value   = d.fx;
+}
+
+function fillFormFromDb(p) {
+  fillForm({
+    ftype: p.ftype, notes: p.notes, pruning: p.pruning || '', fertDose: p.fertDose,
+    pwn: p.pw[0], pwx: p.pw[1], ewn: p.ew[0], ewx: p.ew[1],
+    awn: p.aw[0], awx: p.aw[1], iwn: p.iw[0], iwx: p.iw[1],
+    fn: p.f[0], fx: p.f[1]
+  });
+}
+
+// ── AI AUTOFILL ──
+async function aiAutofill() {
+  var name = document.getElementById('f-name').value.trim();
+  var statusEl = document.getElementById('ai-fill-status');
+  var btn = document.getElementById('btn-ai-fill');
+  if (!name) { statusEl.style.color = 'var(--red-dot)'; statusEl.textContent = 'Inserisci prima il nome della pianta.'; return; }
+
+  btn.disabled = true; btn.style.opacity = '.5';
+  statusEl.style.color = 'var(--sage)';
+
+  var apiKey = getAnthropicKey();
+
+  if (apiKey) {
+    // ── Use Claude API ──
+    statusEl.textContent = '✦ Claude sta compilando i dati…';
+    try {
+      var prompt = 'Sei un esperto di piante da appartamento e da balcone, con conoscenza del clima di Milano (zona 8b, inverni miti, estati calde). '
+        + 'Fornisci i dati di cura ottimali per una pianta in vaso: "' + name + '".\n'
+        + 'Rispondi SOLO con un oggetto JSON valido su una riga, senza testo aggiuntivo, senza backtick, senza commenti.\n'
+        + 'Formato esatto (tutti i campi obbligatori):\n'
+        + '{"ftype":"tipo concime (es. Universale, Fiorite, Acidofile, Succulente, Palme, Bio)","notes":"metodo annaffiatura max 150 car","pruning":"note potatura max 150 car","fertDose":"dose concime es. 5ml per 1L su substrato umido","pwn":giorni_min_p,"pwx":giorni_max_p,"ewn":giorni_min_e,"ewx":giorni_max_e,"awn":giorni_min_a,"awx":giorni_max_a,"iwn":giorni_min_i,"iwx":giorni_max_i,"fn":giorni_min_concime,"fx":giorni_max_concime}\n'
+        + 'pwn/pwx=primavera, ewn/ewx=estate, awn/awx=autunno, iwn/iwx=inverno. Tutti valori interi positivi.';
+
+      var res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 400,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!res.ok) {
+        var err = await res.json().catch(function(){ return {}; });
+        throw new Error(err.error ? err.error.message : 'Errore API ' + res.status);
+      }
+
+      var data = await res.json();
+      var text = (data.content || []).map(function(b){ return b.text || ''; }).join('').trim();
+      // Strip any accidental markdown fences
+      text = text.replace(/```json|```/g, '').trim();
+      var d = JSON.parse(text);
+
+      // Validate required numeric fields
+      var numFields = ['pwn','pwx','ewn','ewx','awn','awx','iwn','iwx','fn','fx'];
+      numFields.forEach(function(k){ if (!d[k] || isNaN(d[k])) throw new Error('Campo mancante: ' + k); });
+
+      fillForm(d);
+      statusEl.style.color = 'var(--moss)';
+      statusEl.textContent = '✅ Compilato da Claude — controlla e modifica se necessario';
+    } catch(e) {
+      // Fallback to local DB on error
+      statusEl.style.color = 'var(--terra)';
+      statusEl.textContent = '⚠️ Errore API (' + (e.message || 'riprova') + ') — provo nel database locale…';
+      var plant = findPlantInDb(name);
+      if (plant) { fillFormFromDb(plant); statusEl.style.color = 'var(--moss)'; statusEl.textContent = '✅ Trovato nel database locale — controlla e modifica'; }
+    }
+  } else {
+    // ── Local DB only ──
+    statusEl.textContent = '🔍 Ricerca nel database locale…';
+    var plant = findPlantInDb(name);
+    if (plant) {
+      fillFormFromDb(plant);
+      statusEl.style.color = 'var(--moss)';
+      statusEl.textContent = '✅ Dati trovati — controlla e modifica se necessario';
+    } else {
+      statusEl.style.color = 'var(--terra)';
+      statusEl.textContent = '⚠️ Pianta non trovata. Aggiungi una chiave Anthropic in ☁️ Impostazioni cloud per usare Claude su qualsiasi pianta.';
+    }
+  }
+
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+function fillForm(d) {
+  if (d.ftype)    document.getElementById('f-ftype').value    = d.ftype;
+  if (d.notes)    document.getElementById('f-notes').value    = d.notes;
+  if (d.pruning)  document.getElementById('f-pruning').value  = d.pruning;
+  if (d.fertDose) document.getElementById('f-fertdose').value = d.fertDose;
+  if (d.pwn)  document.getElementById('f-pwn').value  = d.pwn;
+  if (d.pwx)  document.getElementById('f-pwx').value  = d.pwx;
+  if (d.ewn)  document.getElementById('f-ewn').value  = d.ewn;
+  if (d.ewx)  document.getElementById('f-ewx').value  = d.ewx;
+  if (d.awn)  document.getElementById('f-awn').value  = d.awn;
+  if (d.awx)  document.getElementById('f-awx').value  = d.awx;
+  if (d.iwn)  document.getElementById('f-iwn').value  = d.iwn;
+  if (d.iwx)  document.getElementById('f-iwx').value  = d.iwx;
+  if (d.fn)   document.getElementById('f-fn').value   = d.fn;
+  if (d.fx)   document.getElementById('f-fx').value   = d.fx;
+}
+
+function fillFormFromDb(p) {
+  fillForm({
+    ftype: p.ftype, notes: p.notes, pruning: p.pruning || '', fertDose: p.fertDose,
+    pwn: p.pw[0], pwx: p.pw[1], ewn: p.ew[0], ewx: p.ew[1],
+    awn: p.aw[0], awx: p.aw[1], iwn: p.iw[0], iwx: p.iw[1],
+    fn: p.f[0], fx: p.f[1]
+  });
+}
+
 
 
 function exportData() {
@@ -1413,6 +1618,13 @@ function openCloudModal() {
   document.getElementById('cloud-connected-view').style.display    = connected ? 'block' : 'none';
   if (connected) {
     document.getElementById('cloud-binid-display').textContent = cloudBinId;
+    var ak = getAnthropicKey();
+    var akInput = document.getElementById('anthropic-key-input');
+    var akStatus = document.getElementById('anthropic-key-status');
+    akInput.value = ak ? ak.slice(0,12) + '…' : '';
+    akInput.placeholder = ak ? '(chiave salvata)' : 'sk-ant-…';
+    akStatus.textContent = ak ? '✅ Chiave attiva — "Compila con AI" usa Gemini.' : '';
+    akStatus.style.color = 'var(--moss)';
   } else {
     document.getElementById('cloud-apikey').value = cloudApiKey || '';
     document.getElementById('cloud-binid').value  = '';
